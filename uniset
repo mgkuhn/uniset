@@ -1,7 +1,7 @@
 #!/usr/bin/perl
-# Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn@acm.org>
+# Uniset -- Unicode subset manager -- Markus Kuhn
 # http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz
-# $Id: uniset,v 1.17 2003-04-22 12:14:06 mgk25 Exp $
+# $Id: uniset,v 1.18 2003-04-22 12:15:54 mgk25 Exp $
 
 print <<End if $#ARGV < 0;
 Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn\@acm.org>
