@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 # Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn@acm.org>
 # http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz
-# $Id: uniset,v 1.10 2001-08-11 11:01:17 mgk25 Exp $
+# $Id: uniset,v 1.11 2001-08-28 19:26:50 mgk25 Exp $
 
 print <<End if $#ARGV < 0;
 Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn\@acm.org>
@@ -574,9 +574,9 @@ while ($_ = shift(@ARGV)) {
 	    }
 	}
 	if ($last_i ne '') {
-	    printf("0x%04X },", $last_i);
+	    printf("0x%04X }", $last_i);
 	}
-	print "};\n";
+	print "\n};\n";
     } elsif (/^utf8-list$/) {
 	$col = 0;
 	$block = 0;
