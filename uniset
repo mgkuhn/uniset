@@ -29,6 +29,7 @@ Commands to tailor the following output commands:
 
   html         write HTML tables instead of plain text
   img          write HTML tables and include a GIF image for every entry
+  imgblock     write a block of GIFs in HTML format
   ucs          add the unicode character itself to the table (UTF-8 in
                plain table, numeric character reference in HTML)
 
@@ -93,17 +94,17 @@ while (<UDATA>) {
 }
 
 while ($_ = shift(@ARGV)) {
-    if (/html/) {
+    if (/^html$/) {
 	$html = 1;
-    } elsif (/img/) {
+    } elsif (/^img$/) {
 	$html = 1;
 	$image = 1;
-    } elsif (/header/) {
-	$header = shift(@ARGV);
-	open(HEADER, $header) || die("Can't open header file '$header': '$!'");
-	while (<HEADER>) {
+    } elsif (/^template$/) {
+	$template = shift(@ARGV);
+	open(TEMPLATE, $template) || die("Can't open template file '$template': '$!'");
+	while (<TEMPLATE>) {
 	    if (/^\#\s*include\s+\"([^\"]*)\"\s*$/) {
-		open(INCLUDE, $1) || die("Can't open header include file '$1': '$!'");
+		open(INCLUDE, $1) || die("Can't open template include file '$1': '$!'");
 		while (<INCLUDE>) {
 		    print $_;
 		}
@@ -112,7 +113,7 @@ while ($_ = shift(@ARGV)) {
 		print $_;
 	    }
 	}
-	close(HEADER);
+	close(TEMPLATE);
     } elsif (/^([+-])(.*)/) {
 	push(@SETS, $_);
 	$remove = $1 eq "-";
@@ -132,6 +133,30 @@ while ($_ = shift(@ARGV)) {
 	$setname = $setfile;
 	$setname =~ s/([^.\[\]]*)\..*/$1/;
 	while (<SET>) {
+	    if (/^<code_set_name>/) {
+		# handle ISO 15897 (POSIX registry) charset mapping format
+		undef $comment_char;
+		undef $escape_char;
+		while (<SET>) {
+		    if ($comment_char && /^$comment_char/) {
+			# remove comments
+			$_ = $`;
+		    }
+		    next if (/^\032?\s*$/);                                             # skip empty lines
+		    if (/^<comment_char> (\S)$/) {
+			$comment_char = $1;
+		    } elsif (/^<escape_char> (\S)$/) {
+			$escape_char = $1;
+		    } elsif (/^(END )?CHARMAP$/) {
+			#ignore
+		    } elsif (/^<.*>\s*\/x([0-9A-F]{2})\s*<U([0-9A-F]{4})>/) {
+			$used{$2} .= "[${setname}{$1}]" unless $remove;
+			delete $used{$unicode} if $remove;
+		    } else {
+			die("Syntax error in line $. in file '$setfile':\n'$_'\n");
+		    }
+		}
+	    }
 	    tr/a-z/A-Z/;           # make input uppercase
 	    if ($cedf) {
 		if ($. > 4) {
@@ -158,7 +183,7 @@ while ($_ = shift(@ARGV)) {
 		# handle entry from a ftp.unicode.org mapping file
 		$used{$4} .= "[${setname}{$2}]" unless $remove;
 		delete $used{$4} if $remove;
-	    } elsif (/^\s*(0X|U\+|U-)?([0-9A-F]{4})(\s*-\s*|\s+)(0X|U\+|U-)?([0-9A-F]{4})\s*$/) {
+	    } elsif (/^\s*(0X|U\+|U-)?([0-9A-F]{4})(\s*-\s*|\s*\.\.\s*|\s+)(0X|U\+|U-)?([0-9A-F]{4})\s*$/) {
 		# handle interval specification
 		$first = hex($2);
 		$last = hex($5);
@@ -197,7 +222,12 @@ while ($_ = shift(@ARGV)) {
 	    }
 	}
 	close SET;
-    } elsif (/loadimages/) {
+    } elsif (/^loadimages$/ || /^loadbigimages$/) {
+	if (/^loadimages$/) {
+	    $prefix = "Small.Glyphs";
+	} else {
+	    $prefix = "Glyphs";
+	}
 	$total = 0;
 	for $i (keys(%used)) {
 	    next if ($name{$i} eq "<control>");
@@ -210,14 +240,55 @@ while ($_ = shift(@ARGV)) {
 	    $count++;
 	    $j = $i;
 	    $j =~ s/(..)(..)/$1/;
-	    $gif = "http://charts.unicode.org/Unicode.charts/Small.Glyphs/$j/U$i.gif";
+	    $gif = "http://charts.unicode.org/Unicode.charts/$prefix/$j/U$i.gif";
 	    print("\r$count/$total: $gif");
-	    system("mkdir -p Small.Glyphs/$j; cd Small.Glyphs/$j; webcopy -u -s $gif &");
+	    system("mkdir -p $prefix/$j; cd $prefix/$j; webcopy -u -s $gif &");
 	    select(undef, undef, undef, 0.2);
 	}
 	print("\n");
 	exit 0;
-    } elsif (/table/) {
+    } elsif (/^giftable/) {
+	# form a table of glyphs (requires pbmtools installed)
+	$count = 0;
+	for $i (keys(%used)) {
+	    $count++ unless $name{$i} eq "<control>";
+	}
+	$width = int(sqrt($count/sqrt(2)) + 0.5);
+	$width = $1 if /^giftable([0-9]+)$/;
+	system("rm -f tmp-*.pnm table.pnm~ table.pnm");
+	$col = 0;
+	$row = 0;
+	for $i (sort(keys(%used))) {
+	    next if ($name{$i} eq "<control>");
+	    $j = $i;
+	    $j =~ s/(..)(..)/$1/;
+	    $gif = "Small.Glyphs/$j/U$i.gif";
+	    $pnm = sprintf("tmp-%02x.pnm", $col);
+	    $fallback = "Small.Glyphs/FF/UFFFD.gif";
+	    system("giftopnm $gif >$pnm || { rm $pnm ; giftopnm $fallback >$pnm ; }");
+	    if (++$col == $width) {
+		system("pnmcat -lr tmp-*.pnm | cat >tmp-row.pnm");
+		if ($row == 0) {
+		    system("mv tmp-row.pnm table.pnm");
+		} else {
+		    system("mv table.pnm table.pnm~; pnmcat -tb table.pnm~ tmp-row.pnm >table.pnm");
+		}
+		$row++;
+		$col = 0;
+		system("rm -f tmp-*.pnm table.pnm~");
+	    }
+	}
+	if ($col > 0) {
+	    system("pnmcat -lr tmp-*.pnm | cat >tmp-row.pnm");
+	    if ($row == 0) {
+		system("mv tmp-row.pnm table.pnm");
+	    } else {
+		system("mv table.pnm table.pnm~; pnmcat -tb -jleft -black table.pnm~ tmp-row.pnm >table.pnm");
+	    }
+	}
+	system("rm -f table.gif ; ppmtogif table.pnm > table.gif");
+	system("rm -f tmp-*.pnm table.pnm~ table.pnm");
+    } elsif (/^table$/) {
 	# go through all used names to print full table
 	print "<TABLE border=2>\n" if $html;
 	for $i (sort(keys(%used))) {
@@ -241,7 +312,29 @@ while ($_ = shift(@ARGV)) {
 	    }
 	}
 	print "</TABLE>\n" if $html;
-    } elsif (/source/) {
+    } elsif (/^imgblock$/) {
+	$width = 16;
+	$width = $1 if /giftable([0-9]+)/;
+	$col = 0;
+	$subline = "";
+	print "\n<P><TABLE cellspacing=0 cellpadding=0>";
+	for $i (sort(keys(%used))) {
+	    print "<TR>" if $col == 0;
+	    $j = $i;
+	    $j =~ s/(..)(..)/$1/;
+	    $gif = "Small.Glyphs/$j/U$i.gif";
+	    $alt = "$name{$i}";
+	    print "<TD><img width=32 height=32 src=\"$gif\" alt=\"$alt\">";
+	    $subline .= "<TD><SMALL><SAMP>$i</SAMP></SMALL>";
+	    if (++$col == $width) {
+		print "<TR align=center>$subline";
+		$col = 0;
+		$subline = "";
+	    }
+	}
+	print "<TR align=center>$subline" if ($col > 0);
+	print "</TABLE>\n";
+    } elsif (/^source$/) {
 	# count how many characters are attributed to the various source set combinations
 	print "<P>Number of occurences of source character set combinations:\n<TABLE border=2>" if $html;
 	for $i (keys(%used)) {
@@ -257,7 +350,7 @@ while ($_ = shift(@ARGV)) {
 	    print "<TR><TD>$contribs{$j}<TD>$j\n" if $html;
 	}
 	print "</TABLE>\n" if $html;
-    } elsif (/compact/) {
+    } elsif (/^compact$/) {
 	# print compact table in P10 MES format
 	print "<P>Compact representation of this character set:\n<TABLE border=2>" if $html;
 	print "<TR><TD><B>Rows</B><TD><B>Positions (Cells)</B>" if $html;
@@ -310,7 +403,7 @@ while ($_ = shift(@ARGV)) {
 	print "\n" if ($current_row ne '');
 	print "</TABLE>\n" if $html;
 	print "\n";
-    } elsif (/nr/) {
+    } elsif (/^nr$/) {
 	print "<P>" if $html;
 	print "# " unless $html;
 	print "Number of characters in above table: ";
@@ -320,7 +413,7 @@ while ($_ = shift(@ARGV)) {
 	}
 	print $count;
 	print "\n";
-    } elsif (/clean/) {
+    } elsif (/^clean$/) {
 	# remove characters from set that are not in $unicodedata
 	for $i (keys(%used)) {
 	    delete $used{$i} unless $name{$i};
