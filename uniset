@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 # Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn@acm.org>
 # http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz
-# $Id: uniset,v 1.16 2002-06-13 15:43:53 mgk25 Exp $
+# $Id: uniset,v 1.17 2003-04-22 12:14:06 mgk25 Exp $
 
 print <<End if $#ARGV < 0;
 Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn\@acm.org>
@@ -148,6 +148,57 @@ sub iswide ($) {
 	     ($ucs >= 0xff00 && $ucs <= 0xff60) || # Fullwidth Forms
 	     ($ucs >= 0xffe0 && $ucs <= 0xffe6) ||
 	     ($ucs >= 0x20000 && $ucs <= 0x2ffff)));
+}
+
+# Return the Unicode name that belongs to a given character code
+
+# Jamo short names, see Unicode 3.0, table 4-4, page 86
+
+my @lname = ('G', 'GG', 'N', 'D', 'DD', 'R', 'M', 'B', 'BB', 'S', 'SS', '',
+	     'J', 'JJ', 'C', 'K', 'T', 'P', 'H'); # 1100..1112
+my @vname = ('A', 'AE', 'YA', 'YAE', 'EO', 'E', 'YEO', 'YE', 'O',
+	     'WA', 'WAE', 'OE', 'YO', 'U', 'WEO', 'WE', 'WI', 'YU',
+	     'EU', 'YI', 'I'); # 1161..1175
+my @tname = ('G', 'GG', 'GS', 'N', 'NJ', 'NH', 'D', 'L', 'LG', 'LM',
+	     'LB', 'LS', 'LT', 'LP', 'LH', 'M', 'B', 'BS', 'S', 'SS',
+	     'NG', 'J', 'C', 'K', 'T', 'P', 'H'); # 11a8..11c2
+
+sub name {
+    my $ucs = shift(@_);
+    
+    # The intervals used here reflect Unicode Version 3.2
+    if (($ucs >=  0x3400 && $ucs <=  0x4db5) ||
+	($ucs >=  0x4e00 && $ucs <=  0x9fa5) ||
+	($ucs >= 0x20000 && $ucs <= 0x2a6d6)) {
+	return "CJK UNIFIED IDEOGRAPH-" . sprintf("%04X", $ucs);
+    }
+    
+    if ($ucs >= 0xac00 && $ucs <= 0xd7a3) {
+	my $s = $ucs - 0xac00;
+	my $l = 0x1100 + int($s / (21 * 28));
+	my $v = 0x1161 + int(($s % (21 * 28)) / 28);
+	my $t = 0x11a7 + $s % 28;
+	return "HANGUL SYLLABLE " . 
+	    ($lname[int($s / (21 * 28))] .
+	     $vname[int(($s % (21 * 28)) / 28)] .
+	     $tname[$s % 28 - 1]);
+    }
+    
+    return $name{$i};
+}
+
+sub is_unicode {
+    my $ucs = shift(@_);
+
+    # The intervals used here reflect Unicode Version 3.2
+    if (($ucs >=  0x3400 && $ucs <=  0x4db5) ||
+	($ucs >=  0x4e00 && $ucs <=  0x9fa5) ||
+	($ucs >=  0xac00 && $ucs <=  0xd7a3) ||
+	($ucs >= 0x20000 && $ucs <= 0x2a6d6)) {
+	return 1;
+    }
+    
+    return exists $name{$i};
 }
 
 
@@ -475,13 +526,13 @@ while ($_ = shift(@ARGV)) {
 		print "<TR>";
 		print "<TD><img width=32 height=32 src=\"$gif\">" if $image;
 		printf("<TD>&#%d;", $i) if $adducs;
-		print "<TD><SAMP>$j</SAMP><TD><SAMP>$name{$i}";
+		print "<TD><SAMP>$j</SAMP><TD><SAMP>" . name($i);
 		print " ($comment{$i})" if $comment{$i};
 		print "</SAMP><TD><SMALL>$sources</SMALL>\n";
 	    } else {
 		printf("%04X \# ", $i);
 		print utf8($i) . " " if $adducs;
-		print "$name{$i}\n";
+		print name($i) ."\n";
 	    }
 	}
 	print "</TABLE>\n" if $html;
@@ -496,7 +547,7 @@ while ($_ = shift(@ARGV)) {
 	    $j = sprintf("%04X", $i);
 	    $j =~ /(..)(..)/;
 	    $gif = "Small.Glyphs/$1/U$j.gif";
-	    $alt = "$name{$i}";
+	    $alt = name($i);
 	    print "<TD><img width=32 height=32 src=\"$gif\" alt=\"$alt\">";
 	    $subline .= "<TD><SMALL><SAMP>$j</SAMP></SMALL>";
 	    if (++$col == $width) {
@@ -668,12 +719,12 @@ while ($_ = shift(@ARGV)) {
     } elsif (/^clean$/) {
 	# remove characters from set that are not in $unicodedata
 	for $i (keys(%used)) {
-	    delete $used{$i} unless $name{$i};
+	    delete $used{$i} unless is_unicode($i);
 	}
     } elsif (/^unknown$/) {
 	# remove characters from set that are in $unicodedata
 	for $i (keys(%used)) {
-	    delete $used{$i} if $name{$i};
+	    delete $used{$i} if is_unicode($i);
 	}
     } else {
 	die("Unknown command line command '$_'");
