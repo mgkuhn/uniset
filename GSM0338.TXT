@@ -1,14 +1,14 @@
 #
 #	Name:             GSM 03.38 to Unicode
-#	Unicode version:  3.0
-#	Table version:    1.1
+#	Unicode version:  3.2
+#	Table version:    1.2
 #	Table format:     Format A
-#	Date:             2000 May 30
-#	Authors:          Ken Whistler <kenw@sybase.com>,
+#	Date:             2002 April 5
+#	Authors:          Ken Whistler <ken@unicode.org>,
 #                         Kent Karlsson <keka@im.se>,
 #                         Markus Kuhn <mkuhn@acm.org>
 #
-#	Copyright (c) 2000 Unicode, Inc.  All Rights reserved.
+#	Copyright (c) 2000-2002 Unicode, Inc.  All Rights reserved.
 #
 #	This file is provided as-is by Unicode, Inc. (The Unicode Consortium).
 #	No claims are made as to fitness for any particular purpose.  No
@@ -30,7 +30,7 @@
 #       ETSI GSM 03.38 7-bit default alphabet characters map into Unicode.
 #	This mapping is based on ETSI TS 100 900 V7.2.0 (1999-07), with
 #	a correction of 0x09 to *small* c-cedilla, instead of *capital*
-#	C-cedilla.
+#	C-cedilla. http://www.etsi.org/
 #
 #	Format:  Three tab-separated columns
 #		 Column #1 is the ETSI GSM 03.38 7-bit default alphabet 
@@ -54,14 +54,14 @@
 #       The ETSI GSM 03.38 specification shows an uppercase C-cedilla
 #       glyph at 0x09. This may be the result of limited display
 #       capabilities for handling characters with descenders. However, the
-#       language coverage intent is clearly for the lowercase c-cedilla, as shown
-#       in the mapping below. The mapping for uppercase C-cedilla is shown
-#       in a commented line in the mapping table.
+#       language coverage intent is clearly for the lowercase c-cedilla, as
+#       shown in the mapping below. The mapping for uppercase C-cedilla is
+#       shown in a commented line in the mapping table.
 #
-#	The ESC character 0x1B is
-#	mapped to the no-break space character, unless it is part of a
-#	valid ESC sequence, to facilitate round-trip compatibility in
-#	the presence of unknown ESC sequences.
+#       The ESC character 0x1B is mapped to the no-break space character,
+#	unless it is part of a valid ESC sequence, to facilitate
+#	round-trip compatibility in the presence of unknown ESC
+#	sequences.
 #
 #	0x00 is NULL (when followed only by 0x00 up to the
 #	end of (fixed byte length) message, possibly also up to
@@ -75,6 +75,7 @@
 #			added text regarding 0x00's interpretation,
 #                       added second mapping for C-cedilla,
 #                       added mapping of 0x1B escape to NBSP for display.
+#       1.2 version: fixed mapping of GREEK CAPITAL LETTER UPSILON
 #
 #	Updated versions of this file may be found in:
 #		<ftp://ftp.unicode.org/Public/MAPPINGS/>
@@ -192,12 +193,12 @@
 0x54	0x0054	#	LATIN CAPITAL LETTER T
 #0x54	0x03A4	#	GREEK CAPITAL LETTER TAU
 0x55	0x0055	#	LATIN CAPITAL LETTER U
-#0x55	0x03A5	#	GREEK CAPITAL LETTER UPSILON
 0x56	0x0056	#	LATIN CAPITAL LETTER V
 0x57	0x0057	#	LATIN CAPITAL LETTER W
 0x58	0x0058	#	LATIN CAPITAL LETTER X
 #0x58	0x03A7	#	GREEK CAPITAL LETTER CHI
 0x59	0x0059	#	LATIN CAPITAL LETTER Y
+#0x59	0x03A5	#	GREEK CAPITAL LETTER UPSILON
 0x5A	0x005A	#	LATIN CAPITAL LETTER Z
 #0x5A	0x0396	#	GREEK CAPITAL LETTER ZETA
 0x5B	0x00C4	#	LATIN CAPITAL LETTER A WITH DIAERESIS
