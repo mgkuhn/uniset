@@ -1,8 +1,9 @@
 #!/usr/bin/perl
 # Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn@acm.org>
+# $Id: uniset,v 1.9 2001-08-11 10:45:39 mgk25 Exp $
 
 print <<End if $#ARGV < 0;
-Uniset 1.3 -- Unicode subset manager -- Markus Kuhn <mkuhn\@acm.org>
+Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn\@acm.org>
 
 Uniset allows to merge and subtract Unicode subsets. It can output and
 analyse the resulting set in various formats.
@@ -49,7 +50,7 @@ Auxiliary commands:
 
 Formats of character set input files read by the + and - command:
 
-Empty lines, while space at the start and end of the line and any
+Empty lines, white space at the start and end of the line and any
 comment text following a \# are ignored. The following formats are
 recognized
 
@@ -103,7 +104,7 @@ sub utf8 ($) {
 
     } elsif ($c < 0x80000000) {
         return sprintf("%c%c%c%c%c%c",
-                       0xfe |  ($c >> 30),
+                       0xfc |  ($c >> 30),
                        0x80 | (($c >> 24) & 0x3f),
                        0x80 | (($c >> 18) & 0x3f),
                        0x80 | (($c >> 12) & 0x3f),
@@ -167,7 +168,7 @@ my $datadir = "$ENV{HOME}/local/lib/ucs";
 if (!open(UDATA, $unicodedata) && !open(UDATA, "$datadir/$unicodedata")) {
     die ("Can't open Unicode database '$unicodedata':\n$!\n\n" .
 	 "Please make sure that you have downloaded the file\n" .
-	 "ftp://ftp.unicode.org/Public/UNIDATA/UnicodeData-Latest.txt\n");
+	 "ftp://ftp.unicode.org/Public/UNIDATA/UnicodeData.txt\n");
 }
 my (%name, %invname, %category, %comment);
 while (<UDATA>) {
@@ -188,7 +189,7 @@ close(UDATA);
 if (!open(UDATA, $blockdata) && !open(UDATA, "$datadir/$blockdata")) {
     die ("Can't open Unicode blockname list '$blockdata':\n$!\n\n" .
 	 "Please make sure that you have downloaded the file\n" .
-	 "ftp://ftp.unicode.org/Public/UNIDATA/BLOCKS.TXT\n");
+	 "ftp://ftp.unicode.org/Public/UNIDATA/Blocks.txt\n");
 }
 my $blocks = 0;
 my (@blockstart, @blockend, @blockname);
@@ -205,14 +206,10 @@ while (<UDATA>) {
     }
 }
 close(UDATA);
-if ($blockend[$blocks-1] < 0x10000) {
-    $blockstart[$blocks] = 0x10000;
-    $blockend  [$blocks] = 0x1FFFF;
-    $blockname [$blocks] = "Plane 1";
-    $blocks++;
-    $blockstart[$blocks] = 0x20000;
-    $blockend  [$blocks] = 0x1FFFFFFF;
-    $blockname [$blocks] = "Beyond Plane 1";
+if ($blockend[$blocks-1] < 0x110000) {
+    $blockstart[$blocks] = 0x110000;
+    $blockend  [$blocks] = 0x7FFFFFFF;
+    $blockname [$blocks] = "Beyond Plane 16";
     $blocks++;
 }
 
@@ -351,11 +348,7 @@ while ($_ = shift(@ARGV)) {
 		    $used{$i} .= "[${setname}]" unless $remove;
 		    delete $used{$i} if $remove;
 		}
-	    } elsif (/^\s*(0X|U\+|U-)?([0-9A-F]{4,8})\s*/) {
-		# handle single character
-		$used{hex($2)} .= "[${setname}]" unless $remove;
-		delete $used{hex($2)} if $remove;
-	    } elsif (/^\s*([0-9A-F]{2})(\s+[0-9A-F]{2},?|\s+[0-9A-F]{2}-[0-9A-F]{2},?)+/) {
+	    } elsif (/^\s*([0-9A-F]{2,6})(\s+[0-9A-F]{2},?|\s+[0-9A-F]{2}-[0-9A-F]{2},?)+/) {
 		# handle lines from P10 MES draft
 		$row = $1;
 		$cols = $_;
@@ -377,6 +370,10 @@ while ($_ = shift(@ARGV)) {
 			delete $used{$i} if $remove;
 		    }
 		}
+	    } elsif (/^\s*(0X|U\+|U-)?([0-9A-F]{4,8})\s*/) {
+		# handle single character
+		$used{hex($2)} .= "[${setname}]" unless $remove;
+		delete $used{hex($2)} if $remove;
 	    } else {
 		die("Syntax error in line $. in file '$setfile':\n'$_'\n") unless /^\s*(\#.*)?$/;
 	    }
