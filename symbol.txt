@@ -1,8 +1,8 @@
 #
 #  Name:             Adobe Symbol Encoding to Unicode
-#  Unicode version:  3.2
-#  Table version:    0.4
-#  Date:             16 August 2002
+#  Unicode version:  4.0
+#  Table version:    0.5
+#  Date:             12 February 2003
 #  
 #  Format: 4 tab-delimited fields:
 #
@@ -24,6 +24,10 @@
 #
 #  Revision History:
 #
+#    [v0.5, 12 February 2003, Kuhn] Added U+23AF VERTICAL LINE EXTENSION
+#    (arrowvertex, 0xBD), which had been forgotten in Unicode 3.2 and was
+#    only added in Unicode 4.0.
+#
 #    [v0.4, 16 August 2002, Kuhn] Added mappings to the new mathematical
 #    angle brackets U+27E8 and U+27E9 to match the Unicode 3.2 standard.
 #
@@ -33,7 +37,14 @@
 #    integral extension, horizontal arrow extension). Also swapped
 #    the mappings for GREEK LETTER SMALL PHI and GREEK PHI SYMBOL to
 #    match the corresponding clarifications in the Unicode 3.0 and 3.2
-#    standards.
+#    standards. This table is now maintained by Markus Kuhn in
+#    <http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz>. The
+#    Unicode Consortium has decided that it is not going to update
+#    <http://www.unicode.org/Public/MAPPINGS/VENDORS/ADOBE/symbol.txt>
+#    because they say that that their table is only meant to reflect
+#    a fixed mapping used in NeXTStep and will therefore not be updated
+#    as characters that originally had to be mapped to the Corporate Use
+#    Subarea get added to Unicode.
 #
 #    [v0.2, 30 March 1999]
 #    Different algorithm to produce Unicode values (see notes above) results in
@@ -176,7 +187,7 @@
 0xBA	0x2261	# IDENTICAL TO	# equivalence
 0xBB	0x2248	# ALMOST EQUAL TO	# approxequal
 0xBC	0x2026	# HORIZONTAL ELLIPSIS	# ellipsis
-0xBD	0xF8E6	# VERTICAL ARROW EXTENDER	# arrowvertex (CUS)
+0xBD	0x23D0	# VERTICAL LINE EXTENSION	# arrowvertex
 0xBE	0x23AF	# HORIZONTAL LINE EXTENSION	# arrowhorizex
 0xBF	0x21B5	# DOWNWARDS ARROW WITH CORNER LEFTWARDS	# carriagereturn
 0xC0	0x2135	# ALEF SYMBOL	# aleph
