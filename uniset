@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 # Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn@acm.org>
 # http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz
-# $Id: uniset,v 1.15 2002-05-08 00:56:03 mgk25 Exp $
+# $Id: uniset,v 1.16 2002-06-13 15:43:53 mgk25 Exp $
 
 print <<End if $#ARGV < 0;
 Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn\@acm.org>
@@ -474,6 +474,7 @@ while ($_ = shift(@ARGV)) {
 		$gif = "Small.Glyphs/$1/U$j.gif";
 		print "<TR>";
 		print "<TD><img width=32 height=32 src=\"$gif\">" if $image;
+		printf("<TD>&#%d;", $i) if $adducs;
 		print "<TD><SAMP>$j</SAMP><TD><SAMP>$name{$i}";
 		print " ($comment{$i})" if $comment{$i};
 		print "</SAMP><TD><SMALL>$sources</SMALL>\n";
