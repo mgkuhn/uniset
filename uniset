@@ -1,7 +1,9 @@
 #!/usr/bin/perl
 # Uniset -- Unicode subset manager -- Markus Kuhn
 # http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz
-# $Id: uniset,v 1.18 2003-04-22 12:15:54 mgk25 Exp $
+# $Id: uniset,v 1.19 2003-04-22 12:37:21 mgk25 Exp $
+
+my (%name, %invname, %category, %comment);
 
 print <<End if $#ARGV < 0;
 Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn\@acm.org>
@@ -184,7 +186,7 @@ sub name {
 	     $tname[$s % 28 - 1]);
     }
     
-    return $name{$i};
+    return $name{$ucs};
 }
 
 sub is_unicode {
@@ -198,7 +200,7 @@ sub is_unicode {
 	return 1;
     }
     
-    return exists $name{$i};
+    return exists $name{$ucs};
 }
 
 
@@ -215,7 +217,6 @@ if (!open(UDATA, $unicodedata) && !open(UDATA, "$datadir/$unicodedata")) {
 	 "Please make sure that you have downloaded the file\n" .
 	 "ftp://ftp.unicode.org/Public/UNIDATA/UnicodeData.txt\n");
 }
-my (%name, %invname, %category, %comment);
 while (<UDATA>) {
     if (/^([0-9,A-F]{4,8});([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*)$/) {
 	next if $2 ne '<control>' && substr($2, 0, 1) eq '<';
