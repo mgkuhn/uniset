@@ -1,12 +1,18 @@
 #!/usr/bin/perl
 # Uniset -- Unicode subset manager -- Markus Kuhn
 # http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz
-# $Id: uniset,v 1.19 2003-04-22 12:37:21 mgk25 Exp $
+# $Id: uniset,v 1.20 2004-04-10 20:02:15 mgk25 Exp $
+
+require 5.008;
+use open ':utf8';
+
+binmode(STDOUT, ":utf8");
+binmode(STDIN, ":utf8");
 
 my (%name, %invname, %category, %comment);
 
 print <<End if $#ARGV < 0;
-Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn\@acm.org>
+Uniset -- Unicode subset manager -- Markus Kuhn
 
 Uniset allows to merge and subtract Unicode subsets. It can output and
 analyse the resulting set in various formats.
@@ -69,69 +75,6 @@ End
 exit 1 if $#ARGV < 0;
 
 
-# subroutine to convert an integer into a UTF-8 string
-
-sub utf8 ($) {
-    my $c = shift(@_);
-
-    if ($c < 0x80) {
-        return sprintf("%c", $c);
-    } elsif ($c < 0x800) {
-        return sprintf("%c%c", 0xc0 | ($c >> 6), 0x80 | ($c & 0x3f));
-    } elsif ($c < 0x10000) {
-        return sprintf("%c%c%c",
-                       0xe0 |  ($c >> 12),
-                       0x80 | (($c >>  6) & 0x3f),
-                       0x80 | ( $c        & 0x3f));
-    } elsif ($c < 0x200000) {
-        return sprintf("%c%c%c%c",
-                       0xf0 |  ($c >> 18),
-                       0x80 | (($c >> 12) & 0x3f),
-                       0x80 | (($c >>  6) & 0x3f),
-                       0x80 | ( $c        & 0x3f));
-    } elsif ($c < 0x4000000) {
-        return sprintf("%c%c%c%c%c",
-                       0xf8 |  ($c >> 24),
-                       0x80 | (($c >> 18) & 0x3f),
-                       0x80 | (($c >> 12) & 0x3f),
-                       0x80 | (($c >>  6) & 0x3f),
-                       0x80 | ( $c        & 0x3f));
-
-    } elsif ($c < 0x80000000) {
-        return sprintf("%c%c%c%c%c%c",
-                       0xfc |  ($c >> 30),
-                       0x80 | (($c >> 24) & 0x3f),
-                       0x80 | (($c >> 18) & 0x3f),
-                       0x80 | (($c >> 12) & 0x3f),
-                       0x80 | (($c >> 6)  & 0x3f),
-                       0x80 | ( $c        & 0x3f));
-    } else {
-        return utf8(0xfffd);
-    }
-}
-
-# Remove first UTF-8 character from first argument and return
-# it as an integer. Warning: Also accepts overlong UTF-8 sequences.
-
-sub parse_utf8 ($) {
-    my $first = ord($_[0]);
-    my $mask = 0x40;
-
-    $_[0] = substr($_[0], 1);
-
-    return $first if $first < 0x80;
-    return 0xfffd if (($first < 0xc0) || ($first > 0xfd));
-
-    $first &= 0x7f;
-    while ($first & $mask) {
-	$first = ($first & ~$mask) << 6 | (ord($_[0]) & 0x3f);
-	$mask <<= 5;
-	$_[0] = substr($_[0], 1);
-    }
-
-    return $first;
-}
-
 # Subroutine to identify whether the ISO 10646/Unicode character code
 # ucs belongs into the East Asian Wide (W) or East Asian FullWidth
 # (F) category as defined in Unicode Technical Report #11.
@@ -149,7 +92,8 @@ sub iswide ($) {
 	     ($ucs >= 0xfe30 && $ucs <= 0xfe6f) || # CJK Comp. Forms
 	     ($ucs >= 0xff00 && $ucs <= 0xff60) || # Fullwidth Forms
 	     ($ucs >= 0xffe0 && $ucs <= 0xffe6) ||
-	     ($ucs >= 0x20000 && $ucs <= 0x2ffff)));
+	     ($ucs >= 0x20000 && $ucs <= 0x2fffd) ||
+	     ($ucs >= 0x30000 && $ucs <= 0x3fffd)));
 }
 
 # Return the Unicode name that belongs to a given character code
@@ -318,9 +262,10 @@ while ($_ = shift(@ARGV)) {
 	$setname = $setfile;
 	while (<SET>) {
 	    while ($_) {
-		$i = parse_utf8($_);
+		$i = ord($_);
 		$used{$i} .= "[${setname}]" unless $remove;
 		delete $used{$i} if $remove;
+		$_ = substr($_, 1);
 	    }
 	}
 	close SET;
@@ -532,7 +477,7 @@ while ($_ = shift(@ARGV)) {
 		print "</SAMP><TD><SMALL>$sources</SMALL>\n";
 	    } else {
 		printf("%04X \# ", $i);
-		print utf8($i) . " " if $adducs;
+		print pack("U", $i) . " " if $adducs;
 		print name($i) ."\n";
 	    }
 	}
@@ -677,12 +622,12 @@ while ($_ = shift(@ARGV)) {
 	    }
 	    if ($category{$i} eq 'Mn') {
 		# prefix non-spacing character with U+25CC DOTTED CIRCLE
-		print utf8(0x25CC);
+		print "\x{0x25CC}";
 	    } elsif ($category{$i} eq 'Me') {
 		# prefix enclosing non-spacing character with space
 		print " ";
 	    }
-	    print utf8($i);
+	    print pack("U", $i);
 	    $col += 1 + iswide($i);
 	    if ($col >= 64) {
 		print "\n";
