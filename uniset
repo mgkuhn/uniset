@@ -1,0 +1,53 @@
+#!/usr/bin/perl
+
+$unicodedata = "UnicodeData-Latest.txt";
+
+# read list of all Unicode names
+open(UDATA, $unicodedata) || die("Can't open Unicode database '$unicodedata': $!");
+while (<UDATA>) {
+    /^([0-9,A-F]{4});([^;]*);.*/;
+    $name{$1} = $2;
+}
+
+while ($_ = shift(@ARGV)) {
+    if ($_ eq "add") {
+	$set = shift(@ARGV);
+	open(SET, $set) || die("Can't open set file '$set': '$!'");
+	$setname = $set;
+	$setname =~ s/([^.\[\]]*)\..*/$1/;
+	while (<SET>) {
+	    tr/a-z/A-Z/;
+	    if (/^\s*(0X|U+|U-)?([0-9A-F]{2})\s+(0X|U+|U-)?([0-9A-F]{4})\s*(\#.*)?/) {
+		# handle entry from a ftp.unicode.org mapping file
+		$used{$4} .= "[${setname}|$2]";
+	    } elsif (/^\s*(0X|U+|U-)?([0-9A-F]{4})(\s*-\s*|\s+)(0X|U+|U-)?([0-9A-F]{4})\s*(\#.*)?/) {
+		# handle interval specification
+		$first = hex($2);
+		$last = hex($5);
+		for ($i = $first; $i <= $last; $i++) {
+		    $used{sprintf("%04X", $i)} .= "[${setname}]";
+		}
+	    } elsif (/^\s*(0X|U+|U-)?([0-9A-F]{4})\s*(\#.*)?/) {
+		# handle single character
+		$used{$2} .= "[${setname}]";
+	    } else {
+		die("Syntax error inline '$_' in file '$setname'") unless /\s*(\#.*)?/;
+	    }
+	}
+    } else {
+	die("Unknown command line command '$_'");
+    };
+}
+
+# determine max length of a used name
+$maxlen = 0;
+for $i (sort(keys(%used))) {
+    $maxlen = length($name{$i}) if (length($name{$i}) > $maxlen);
+}
+
+# go through all used names
+for $i (sort(keys(%used))) {
+    next if ($name{$i} eq "<control>");
+    $namefield = $name{$i} . " " x ($maxlen - length($name{$i}));
+    print "$i  $namefield  $used{$i}\n";
+}
