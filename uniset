@@ -2,7 +2,7 @@
 # Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn@acm.org>
 
 print <<End if $#ARGV < 0;
-Uniset 1.2 -- Unicode subset manager -- Markus Kuhn <mkuhn\@acm.org>
+Uniset 1.3 -- Unicode subset manager -- Markus Kuhn <mkuhn\@acm.org>
 
 Uniset allows to merge and subtract Unicode subsets. It can output and
 analyse the resulting set in various formats.
@@ -157,12 +157,12 @@ sub iswide ($) {
 }
 
 
-$html = 0;
-$image = 0;
-$ucs = 0;
-$unicodedata = "UnicodeData-Latest.txt";
-$blockdata = "Blocks.txt";
-$datadir = "$ENV{HOME}/local/lib/ucs";
+my $html = 0;
+my $image = 0;
+my $adducs = 0;
+my $unicodedata = "UnicodeData.txt";
+my $blockdata = "Blocks.txt";
+my $datadir = "$ENV{HOME}/local/lib/ucs";
 
 # read list of all Unicode names
 if (!open(UDATA, $unicodedata) && !open(UDATA, "$datadir/$unicodedata")) {
@@ -170,13 +170,15 @@ if (!open(UDATA, $unicodedata) && !open(UDATA, "$datadir/$unicodedata")) {
 	 "Please make sure that you have downloaded the file\n" .
 	 "ftp://ftp.unicode.org/Public/UNIDATA/UnicodeData-Latest.txt\n");
 }
+my (%name, %invname, %category, %comment);
 while (<UDATA>) {
     if (/^([0-9,A-F]{4,8});([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*)$/) {
-	next if length($1) > 4 || $2 =~ /^</;
-        $name{$1} = $2;
-	$invname{$2} = $1;
-	$category{$1} = $3;
-        $comment{$1} = $12;
+	next if $2 ne '<control>' && substr($2, 0, 1) eq '<';
+	$ucs = hex($1);
+        $name{$ucs} = $2;
+	$invname{$2} = $ucs;
+	$category{$ucs} = $3;
+        $comment{$ucs} = $12;
     } else {
         die("Syntax error in line '$_' in file '$unicodedata'");
     }
@@ -189,9 +191,10 @@ if (!open(UDATA, $blockdata) && !open(UDATA, "$datadir/$blockdata")) {
 	 "Please make sure that you have downloaded the file\n" .
 	 "ftp://ftp.unicode.org/Public/UNIDATA/BLOCKS.TXT\n");
 }
-$blocks = 0;
+my $blocks = 0;
+my (@blockstart, @blockend, @blockname);
 while (<UDATA>) {
-    if (/^\s*([0-9,A-F]{4});\s*([0-9,A-F]{4});\s*(.*)$/) {
+    if (/^\s*([0-9,A-F]{4,8})\s*\.\.\s*([0-9,A-F]{4,8})\s*;\s*(.*)$/) {
         $blockstart[$blocks] = hex($1);
 	$blockend  [$blocks] = hex($2);
         $blockname [$blocks] = $3;
@@ -214,16 +217,12 @@ if ($blockend[$blocks-1] < 0x10000) {
     $blocks++;
 }
 
-while (<UDATA>) {
-    /^([0-9,A-F]{4});([^;]*);.*/;
-    $name{$1} = $2;
-}
-
+# process command line arguments
 while ($_ = shift(@ARGV)) {
     if (/^html$/) {
 	$html = 1;
     } elsif (/^ucs$/) {
-	$ucs = 1;
+	$adducs = 1;
     } elsif (/^img$/) {
 	$html = 1;
 	$image = 1;
@@ -260,8 +259,8 @@ while ($_ = shift(@ARGV)) {
 	while (<SET>) {
 	    while ($_) {
 		$i = parse_utf8($_);
-		$used{sprintf("%04X", $i)} .= "[${setname}]" unless $remove;
-		delete $used{sprintf("%04X", $i)} if $remove;
+		$used{$i} .= "[${setname}]" unless $remove;
+		delete $used{$i} if $remove;
 	    }
 	}
 	close SET;
@@ -270,13 +269,13 @@ while ($_ = shift(@ARGV)) {
 	$setfile = $2;
 	$setfile = shift(@ARGV) if $setfile eq "";
 	push(@SETS, $setfile);
-	if ($setfile =~ /^([0-9A-Fa-f]{4})-([0-9A-Fa-f]{4})$/) {
+	if ($setfile =~ /^([0-9A-Fa-f]{4,8})-([0-9A-Fa-f]{4,8})$/) {
 	    # handle intervall specification on command line
 	    $first = hex($1);
 	    $last = hex($2);
 	    for ($i = $first; $i <= $last; $i++) {
-		$used{sprintf("%04X", $i)} .= "[ARG]" unless $remove;
-		delete $used{sprintf("%04X", $i)} if $remove;
+		$used{$i} .= "[ARG]" unless $remove;
+		delete $used{$i} if $remove;
 	    }
 	    next;
 	}
@@ -301,9 +300,9 @@ while ($_ = shift(@ARGV)) {
 			$escape_char = $1;
 		    } elsif (/^(END )?CHARMAP$/) {
 			#ignore
-		    } elsif (/^<.*>\s*\/x([0-9A-F]{2})\s*<U([0-9A-F]{4})>/) {
-			$used{$2} .= "[${setname}{$1}]" unless $remove;
-			delete $used{$2} if $remove;
+		    } elsif (/^<.*>\s*\/x([0-9A-F]{2})\s*<U([0-9A-F]{4,8})>/) {
+			$used{hex($2)} .= "[${setname}{$1}]" unless $remove;
+			delete $used{hex($2)} if $remove;
 		    } else {
 			die("Syntax error in line $. in file '$setfile':\n'$_'\n");
 		    }
@@ -313,9 +312,8 @@ while ($_ = shift(@ARGV)) {
 		# handle X11 BDF file
 		while (<SET>) {
 		    if (/^ENCODING\s+([0-9]+)/) { 
-			$unicode = sprintf("%04X",$1);
-			$used{$unicode} .= "[${setname}]" unless $remove;
-			delete $used{$unicode} if $remove;
+			$used{$1} .= "[${setname}]" unless $remove;
+			delete $used{$1} if $remove;
 		    }
 		}
 		next;
@@ -326,10 +324,10 @@ while ($_ = shift(@ARGV)) {
 		    if (/^([0-9A-F]{2})\t.?\t(.*)$/) {
 			# handle Kosta Kosti's trans CEDF format
 			next if (hex($1) < 32 || (hex($1) > 0x7e && hex($1) < 0xa0));
-			$unicode = $invname{$2};
-			die "unknown ISO 10646 name '$2' in '$setfile' line $..\n" if ! $unicode;
-			$used{$unicode} .= "[${setname}{$1}]" unless $remove;
-			delete $used{$unicode} if $remove;
+			$ucs = $invname{$2};
+			die "unknown ISO 10646 name '$2' in '$setfile' line $..\n" if ! $ucs;
+			$used{$ucs} .= "[${setname}{$1}]" unless $remove;
+			delete $used{$ucs} if $remove;
 		    } else {
 			die("Syntax error in line $. in CEDF file '$setfile':\n'$_'\n");
 		    }
@@ -342,22 +340,22 @@ while ($_ = shift(@ARGV)) {
 	    }
 	    s/^([^\#]*)\#.*$/$1/;  # remove comments
 	    next if (/^\032?\s*$/);     # skip empty lines
-	    if (/^\s*(0X)?([0-9A-F-]{2})\s+(0X|U\+|U-)?([0-9A-F]{4})\s*$/) {
+	    if (/^\s*(0X)?([0-9A-F-]{2})\s+(0X|U\+|U-)?([0-9A-F]{4,8})\s*$/) {
 		# handle entry from a ftp.unicode.org mapping file
-		$used{$4} .= "[${setname}{$2}]" unless $remove;
-		delete $used{$4} if $remove;
-	    } elsif (/^\s*(0X|U\+|U-)?([0-9A-F]{4})(\s*-\s*|\s*\.\.\s*|\s+)(0X|U\+|U-)?([0-9A-F]{4})\s*$/) {
+		$used{hex($4)} .= "[${setname}{$2}]" unless $remove;
+		delete $used{hex($4)} if $remove;
+	    } elsif (/^\s*(0X|U\+|U-)?([0-9A-F]{4,8})(\s*-\s*|\s*\.\.\s*|\s+)(0X|U\+|U-)?([0-9A-F]{4,8})\s*$/) {
 		# handle interval specification
 		$first = hex($2);
 		$last = hex($5);
 		for ($i = $first; $i <= $last; $i++) {
-		    $used{sprintf("%04X", $i)} .= "[${setname}]" unless $remove;
-		    delete $used{sprintf("%04X", $i)} if $remove;
+		    $used{$i} .= "[${setname}]" unless $remove;
+		    delete $used{$i} if $remove;
 		}
-	    } elsif (/^\s*(0X|U\+|U-)?([0-9A-F]{4})\s*/) {
+	    } elsif (/^\s*(0X|U\+|U-)?([0-9A-F]{4,8})\s*/) {
 		# handle single character
-		$used{$2} .= "[${setname}]" unless $remove;
-		delete $used{$2} if $remove;
+		$used{hex($2)} .= "[${setname}]" unless $remove;
+		delete $used{hex($2)} if $remove;
 	    } elsif (/^\s*([0-9A-F]{2})(\s+[0-9A-F]{2},?|\s+[0-9A-F]{2}-[0-9A-F]{2},?)+/) {
 		# handle lines from P10 MES draft
 		$row = $1;
@@ -376,8 +374,8 @@ while ($_ = shift(@ARGV)) {
 			die ("this should never happen '$_'");
 		    }
 		    for ($i = $first; $i <= $last; $i++) {
-			$used{sprintf("%04X", $i)} .= "[${setname}]" unless $remove;
-			delete $used{sprintf("%04X", $i)} if $remove;
+			$used{$i} .= "[${setname}]" unless $remove;
+			delete $used{$i} if $remove;
 		    }
 		}
 	    } else {
@@ -398,14 +396,14 @@ while ($_ = shift(@ARGV)) {
 	}
 	$count = 0;
 	$| = 1;
-	for $i (sort(keys(%used))) {
+	for $i (sort({$a <=> $b} keys(%used))) {
 	    next if ($name{$i} eq "<control>");
 	    $count++;
-	    $j = $i;
-	    $j =~ s/(..)(..)/$1/;
-	    $gif = "http://charts.unicode.org/Unicode.charts/$prefix/$j/U$i.gif";
+	    $j = sprintf("%04X", $i);
+	    $j =~ /(..)(..)/;
+	    $gif = "http://charts.unicode.org/Unicode.charts/$prefix/$1/U$j.gif";
 	    print("\r$count/$total: $gif");
-	    system("mkdir -p $prefix/$j; cd $prefix/$j; webcopy -u -s $gif &");
+	    system("mkdir -p $prefix/$1; cd $prefix/$1; webcopy -u -s $gif &");
 	    select(undef, undef, undef, 0.2);
 	}
 	print("\n");
@@ -421,11 +419,11 @@ while ($_ = shift(@ARGV)) {
 	system("rm -f tmp-*.pnm table.pnm~ table.pnm");
 	$col = 0;
 	$row = 0;
-	for $i (sort(keys(%used))) {
+	for $i (sort({$a <=> $b} keys(%used))) {
 	    next if ($name{$i} eq "<control>");
-	    $j = $i;
-	    $j =~ s/(..)(..)/$1/;
-	    $gif = "Small.Glyphs/$j/U$i.gif";
+	    $j = sprintf("%04X", $i);
+	    $j =~ /(..)(..)/;
+	    $gif = "Small.Glyphs/$1/U$j.gif";
 	    $pnm = sprintf("tmp-%02x.pnm", $col);
 	    $fallback = "Small.Glyphs/FF/UFFFD.gif";
 	    system("giftopnm $gif >$pnm || { rm $pnm ; giftopnm $fallback >$pnm ; }");
@@ -454,7 +452,7 @@ while ($_ = shift(@ARGV)) {
     } elsif (/^table$/) {
 	# go through all used names to print full table
 	print "<TABLE border=2>\n" if $html;
-	for $i (sort(keys(%used))) {
+	for $i (sort({$a <=> $b} keys(%used))) {
 	    next if ($name{$i} eq "<control>");
 	    if ($html) {
 		$sources = $used{$i};
@@ -462,17 +460,17 @@ while ($_ = shift(@ARGV)) {
 		$sources =~ s/^\[//g;
 		$sources =~ s/\]$//g;
 		$sources =~ s/\{(..)\}/<SUB>$1<\/SUB>/g;
-		$j = $i;
-		$j =~ s/(..)(..)/$1/;
-		$gif = "Small.Glyphs/$j/U$i.gif";
+		$j = sprintf("%04X", $i);
+		$j =~ /(..)(..)/;
+		$gif = "Small.Glyphs/$1/U$j.gif";
 		print "<TR>";
 		print "<TD><img width=32 height=32 src=\"$gif\">" if $image;
-		print "<TD><SAMP>$i</SAMP><TD><SAMP>$name{$i}";
+		print "<TD><SAMP>$j</SAMP><TD><SAMP>$name{$i}";
 		print " ($comment{$i})" if $comment{$i};
 		print "</SAMP><TD><SMALL>$sources</SMALL>\n";
 	    } else {
-		print "$i \# ";
-		print utf8(hex($i)) . " " if $ucs;
+		printf("%04X \# ", $i);
+		print utf8($i) . " " if $adducs;
 		print "$name{$i}\n";
 	    }
 	}
@@ -483,14 +481,14 @@ while ($_ = shift(@ARGV)) {
 	$col = 0;
 	$subline = "";
 	print "\n<P><TABLE cellspacing=0 cellpadding=0>";
-	for $i (sort(keys(%used))) {
+	for $i (sort({$a <=> $b} keys(%used))) {
 	    print "<TR>" if $col == 0;
-	    $j = $i;
-	    $j =~ s/(..)(..)/$1/;
-	    $gif = "Small.Glyphs/$j/U$i.gif";
+	    $j = sprintf("%04X", $i);
+	    $j =~ /(..)(..)/;
+	    $gif = "Small.Glyphs/$1/U$j.gif";
 	    $alt = "$name{$i}";
 	    print "<TD><img width=32 height=32 src=\"$gif\" alt=\"$alt\">";
-	    $subline .= "<TD><SMALL><SAMP>$i</SAMP></SMALL>";
+	    $subline .= "<TD><SMALL><SAMP>$j</SAMP></SMALL>";
 	    if (++$col == $width) {
 		print "<TR align=center>$subline";
 		$col = 0;
@@ -523,10 +521,10 @@ while ($_ = shift(@ARGV)) {
 	$current_row = '';
 	$start_col = '';
 	$last_col = '';
-	for $i (sort(keys(%used))) {
+	for $i (sort({$a <=> $b} keys(%used))) {
 	    next if ($name{$i} eq "<control>");
-	    $row = substr($i, 0, 2);
-	    $col = substr($i, 2, 2);
+	    $row = sprintf("%02X", $i >> 8);
+	    $col = sprintf("%02X", $i & 0xff);
 	    if ($row ne $current_row) {
 		if (($last_col ne '') and ($last_col ne $start_col)) {
 		    print "-$last_col";
@@ -574,43 +572,42 @@ while ($_ = shift(@ARGV)) {
 	$last_i = '';
 	$columns = 3;
 	$col = $columns;
-	for $i (sort(keys(%used))) {
+	for $i (sort({$a <=> $b} keys(%used))) {
 	    next if ($name{$i} eq "<control>");
 	    if ($last_i eq '') {
 		if (++$col > $columns) { $col = 1; print "\n "; }
-		print " { 0x$i, ";
+		printf(" { 0x%04X, ", $i);
 		$last_i = $i;
-	    } elsif (hex($i) == hex($last_i) + 1) {
+	    } elsif ($i == $last_i + 1) {
 		$last_i = $i;
 	    } else {
-		print "0x$last_i },";
+		printf("0x%04X },", $last_i);
 		if (++$col > $columns) { $col = 1; print "\n "; }
-		print " { 0x$i, ";
+		printf(" { 0x%04X, ", $i);
 		$last_i = $i;
 	    }
 	}
 	if ($last_i ne '') {
-	    print "0x$last_i }\n";
+	    printf("0x%04X },", $last_i);
 	}
 	print "};\n";
     } elsif (/^utf8-list$/) {
 	$col = 0;
 	$block = 0;
 	$last = -1;
-	for $i (sort(keys(%used))) {
-	    $ii = hex($i);
-	    #next if ($name{$i} eq "<control>");
-	    while ($blockend[$block] < $ii && $block < $blocks - 1) {
+	for $i (sort({$a <=> $b} keys(%used))) {
+	    next if ($name{$i} eq "<control>");
+	    while ($blockend[$block] < $i && $block < $blocks - 1) {
 		$block++;
 	    }
 	    if ($last <= $blockend[$block-1] &&
-		$ii < $blockstart[$block]) {
+		$i < $blockstart[$block]) {
 		print "\n" if ($col);
 		printf "\nFree block (U+%04X-U+%04X):\n\n",
 		    $blockend[$block-1] + 1, $blockstart[$block] - 1;
 		$col = 0;
 	    }
-	    if ($last < $blockstart[$block] && $ii >= $blockstart[$block]) {
+	    if ($last < $blockstart[$block] && $i >= $blockstart[$block]) {
 		print "\n" if ($col);
 		printf "\n$blockname[$block] (U+%04X-U+%04X):\n\n",
 		$blockstart[$block], $blockend[$block];
@@ -623,31 +620,30 @@ while ($_ = shift(@ARGV)) {
 		# prefix enclosing non-spacing character with space
 		print " ";
 	    }
-	    print utf8($ii);
-	    $col += 1 + iswide($ii);
+	    print utf8($i);
+	    $col += 1 + iswide($i);
 	    if ($col >= 64) {
 		print "\n";
 		$col = 0;
 	    }
-	    $last = $ii;
+	    $last = $i;
 	}
 	print "\n" if ($col);
     } elsif (/^collections$/) {
 	$block = 0;
 	$last = -1;
-	for $i (sort(keys(%used))) {
-	    $ii = hex($i);
+	for $i (sort({$a <=> $b} keys(%used))) {
 	    next if ($name{$i} eq "<control>");
-	    while ($blockend[$block] < $ii && $block < $blocks - 1) {
+	    while ($blockend[$block] < $i && $block < $blocks - 1) {
 		$block++;
 	    }
-	    if ($last < $blockstart[$block] && $ii >= $blockstart[$block]) {
+	    if ($last < $blockstart[$block] && $i >= $blockstart[$block]) {
 		print $blockname[$block],
 		  " " x (40 - length($blockname[$block]));
 		printf "%04X-%04X\n",
 		  $blockstart[$block], $blockend[$block];
 	    }
-	    $last = $ii;
+	    $last = $i;
 	}
     } elsif (/^nr$/) {
 	print "<P>" if $html;
