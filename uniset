@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 # Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn@acm.org>
 # http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz
-# $Id: uniset,v 1.13 2002-03-28 15:18:08 mgk25 Exp $
+# $Id: uniset,v 1.14 2002-03-29 13:19:01 mgk25 Exp $
 
 print <<End if $#ARGV < 0;
 Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn\@acm.org>
@@ -18,7 +18,7 @@ Commands to define a set of characters:
   +: filename  add the characters in the UTF-8 file to the set
   -: filename  remove the characters in the UTF-8 file from the set
   +xxxx..yyyy  add the range to the set (xxxx and yyyy are hex numbers)
-  -xxxx..yyyy  remove the range to the set (xxxx and yyyy are hex numbers)
+  -xxxx..yyyy  remove the range from the set (xxxx and yyyy are hex numbers)
   +cat=Xx      add all Unicode characters with category code Xx
   -cat=Xx      remove all Unicode characters with category code Xx
   -cat!=Xx     remove all Unicode characters without category code Xx
@@ -138,13 +138,14 @@ sub iswide ($) {
     my $ucs = shift(@_);
 
     return ($ucs >= 0x1100 &&
-	    ($ucs <= 0x115f ||                   # Hangul Jamo
+	    ($ucs <= 0x115f ||                     # Hangul Jamo
+	     $ucs == 0x2329 || $ucs == 0x232a ||
 	     ($ucs >= 0x2e80 && $ucs <= 0xa4cf &&
-	      ($ucs & ~0x0011) != 0x300a && $ucs != 0x303f) || # CJK .. Yi
+	      $ucs != 0x303f) ||                   # CJK .. Yi
 	     ($ucs >= 0xac00 && $ucs <= 0xd7a3) || # Hangul Syllables
 	     ($ucs >= 0xf900 && $ucs <= 0xfaff) || # CJK Comp. Ideographs
 	     ($ucs >= 0xfe30 && $ucs <= 0xfe6f) || # CJK Comp. Forms
-	     ($ucs >= 0xff00 && $ucs <= 0xff5f) || # Fullwidth Forms
+	     ($ucs >= 0xff00 && $ucs <= 0xff60) || # Fullwidth Forms
 	     ($ucs >= 0xffe0 && $ucs <= 0xffe6) ||
 	     ($ucs >= 0x20000 && $ucs <= 0x2ffff)));
 }
