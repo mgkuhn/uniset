@@ -1,12 +1,12 @@
 #
-#	Name:             CD for ISO/IEC 8859-16:2000 to Unicode
+#	Name:             ISO/IEC 8859-16:2001 to Unicode
 #	Unicode version:  3.0
-#	Table version:    0.1
+#	Table version:    1.0
 #	Table format:     Format A
-#	Date:             1999 December 10
-#	Authors:          Markus Kuhn <mkuhn@acm.org>
+#	Date:             2001 July 26
+#	Authors:          Markus Kuhn <http://www.cl.cam.ac.uk/~mgk25/>
 #
-#	Copyright (c) 1999 Unicode, Inc.  All Rights reserved.
+#	Copyright (c) 1999-2001 Unicode, Inc.  All Rights reserved.
 #
 #	This file is provided as-is by Unicode, Inc. (The Unicode Consortium).
 #	No claims are made as to fitness for any particular purpose.  No
@@ -25,7 +25,7 @@
 #	General notes:
 #
 #	This table contains the data the Unicode Consortium has on how
-#       the CD for ISO/IEC 8859-16:2000 characters map into Unicode.
+#       ISO/IEC 8859-16:2001 characters map into Unicode.
 #
 #	Format:  Three tab-separated columns
 #		 Column #1 is the ISO/IEC 8859-16 code (in hex as 0xXX)
@@ -206,13 +206,13 @@
 0xA2	0x0105	#	LATIN SMALL LETTER A WITH OGONEK
 0xA3	0x0141	#	LATIN CAPITAL LETTER L WITH STROKE
 0xA4	0x20AC	#	EURO SIGN
-0xA5	0x00AB	#	LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
+0xA5	0x201E	#	DOUBLE LOW-9 QUOTATION MARK
 0xA6	0x0160	#	LATIN CAPITAL LETTER S WITH CARON
 0xA7	0x00A7	#	SECTION SIGN
 0xA8	0x0161	#	LATIN SMALL LETTER S WITH CARON
 0xA9	0x00A9	#	COPYRIGHT SIGN
 0xAA	0x0218	#	LATIN CAPITAL LETTER S WITH COMMA BELOW
-0xAB	0x201E	#	DOUBLE LOW-9 QUOTATION MARK
+0xAB	0x00AB	#	LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
 0xAC	0x0179	#	LATIN CAPITAL LETTER Z WITH ACUTE
 0xAD	0x00AD	#	SOFT HYPHEN
 0xAE	0x017A	#	LATIN SMALL LETTER Z WITH ACUTE
@@ -220,7 +220,7 @@
 0xB0	0x00B0	#	DEGREE SIGN
 0xB1	0x00B1	#	PLUS-MINUS SIGN
 0xB2	0x010C	#	LATIN CAPITAL LETTER C WITH CARON
-0xB3	0x010D	#	LATIN SMALL LETTER C WITH CARON
+0xB3	0x0142	#	LATIN SMALL LETTER L WITH STROKE
 0xB4	0x017D	#	LATIN CAPITAL LETTER Z WITH CARON
 0xB5	0x201D	#	RIGHT DOUBLE QUOTATION MARK
 0xB6	0x00B6	#	PILCROW SIGN
