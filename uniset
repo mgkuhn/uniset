@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 # Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn@acm.org>
-# $Id: uniset,v 1.9 2001-08-11 10:45:39 mgk25 Exp $
+# http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz
+# $Id: uniset,v 1.10 2001-08-11 11:01:17 mgk25 Exp $
 
 print <<End if $#ARGV < 0;
 Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn\@acm.org>
@@ -34,19 +35,8 @@ Command to output descriptions of the constructed set of characters:
 Commands to tailor the following output commands:
 
   html         write HTML tables instead of plain text
-  img          write HTML tables and include a GIF image for every entry
-  imgblock     write a block of GIFs in HTML format
   ucs          add the unicode character itself to the table (UTF-8 in
                plain table, numeric character reference in HTML)
-
-Auxiliary commands:
-
-  loadimages   download a GIF image for every character in the set from
-               <http://charts.unicode.org/Unicode.charts/Small.Glyphs/xx/
-               Uxxyy.gif> where xxyy is the uppercase hexadecimal number
-               of the character. This command requires the "webcopy"
-               script to be installed, which is available from
-               <ftp://ftp.inf.utfsm.cl/pub/utfsm/perl/webcopy.tgz>.
 
 Formats of character set input files read by the + and - command:
 
