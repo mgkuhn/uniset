@@ -1,23 +1,8 @@
 #
 #  Name:             Adobe Symbol Encoding to Unicode
 #  Unicode version:  3.2
-#  Table version:    0.3
-#  Date:             5 April 2002
-#  
-#  Copyright (c) 1991-2002 Unicode, Inc. All Rights reserved.
-#  
-#  This file is provided as-is by Unicode, Inc. (The Unicode Consortium). No
-#  claims are made as to fitness for any particular purpose. No warranties of
-#  any kind are expressed or implied. The recipient agrees to determine
-#  applicability of information provided. If this file has been provided on
-#  magnetic media by Unicode, Inc., the sole remedy for any claim will be
-#  exchange of defective media within 90 days of receipt.
-#  
-#  Recipient is granted the right to make copies in any form for internal
-#  distribution and to freely use the information supplied in the creation of
-#  products supporting Unicode. Unicode, Inc. specifically excludes the right
-#  to re-distribute this file directly to third parties or other organizations
-#  whether for profit or not.
+#  Table version:    0.4
+#  Date:             16 August 2002
 #  
 #  Format: 4 tab-delimited fields:
 #
@@ -39,12 +24,16 @@
 #
 #  Revision History:
 #
-#    [v0.3, 5 April 2002] Swapped columns and added 0x prefix to follow
+#    [v0.4, 16 August 2002, Kuhn] Added mappings to the new mathematical
+#    angle brackets U+27E8 and U+27E9 to match the Unicode 3.2 standard.
+#
+#    [v0.3, 5 April 2002, Kuhn] Swapped columns and added 0x prefix to follow
 #    standard format. Some former Corporate Use Subarea mappings changed
-#    to use Unicode 3.2 characters (bracket elements, integral extension,
-#    horizontal arrow extension). Also swapped the mappings for GREEK
-#    LETTER SMALL PHI and GREEK PHI SYMBOL to match the corresponding
-#    clarifications in the Unicode 3.0 and 3.2 standards.
+#    manually to use Unicode 3.2 characters (bracket elements,
+#    integral extension, horizontal arrow extension). Also swapped
+#    the mappings for GREEK LETTER SMALL PHI and GREEK PHI SYMBOL to
+#    match the corresponding clarifications in the Unicode 3.0 and 3.2
+#    standards.
 #
 #    [v0.2, 30 March 1999]
 #    Different algorithm to produce Unicode values (see notes above) results in
@@ -55,7 +44,8 @@
 #
 #    [v0.1, 5 May 1995] First release.
 #
-#  Contact <unicode-inc@unicode.org> with any questions or comments.
+#  Contact Markus Kuhn <http://www.cl.cam.ac.uk/~mgk25/> with any
+#  questions or comments.
 #
 0x20	0x0020	# SPACE	# space
 0x20	0x00A0	# NO-BREAK SPACE	# space
@@ -223,6 +213,7 @@
 0xDF	0x21D3	# DOWNWARDS DOUBLE ARROW	# arrowdbldown
 0xE0	0x25CA	# LOZENGE	# lozenge
 0xE1	0x2329	# LEFT-POINTING ANGLE BRACKET	# angleleft
+0xE1	0x27E8	# MATHEMATICAL LEFT ANGLE BRACKET	# angleleft
 0xE2	0xF8E8	# REGISTERED SIGN SANS SERIF	# registersans (CUS)
 0xE3	0xF8E9	# COPYRIGHT SIGN SANS SERIF	# copyrightsans (CUS)
 0xE4	0xF8EA	# TRADE MARK SIGN SANS SERIF	# trademarksans (CUS)
@@ -238,6 +229,7 @@
 0xEE	0x23A9	# LEFT CURLY BRACKET LOWER HOOK	# braceleftbt
 0xEF	0x23AA	# CURLY BRACKET EXTENSION	# braceex
 0xF1	0x232A	# RIGHT-POINTING ANGLE BRACKET	# angleright
+0xF1	0x27E9	# MATHEMATICAL RIGHT ANGLE BRACKET	# angleright
 0xF2	0x222B	# INTEGRAL	# integral
 0xF3	0x2320	# TOP HALF INTEGRAL	# integraltp
 0xF4	0x23AE	# INTEGRAL EXTENSION	# integralex
