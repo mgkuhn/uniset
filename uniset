@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 # Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn@acm.org>
 # http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz
-# $Id: uniset,v 1.14 2002-03-29 13:19:01 mgk25 Exp $
+# $Id: uniset,v 1.15 2002-05-08 00:56:03 mgk25 Exp $
 
 print <<End if $#ARGV < 0;
 Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn\@acm.org>
@@ -365,7 +365,7 @@ while ($_ = shift(@ARGV)) {
 		# handle lines from P10 MES draft
 		$row = $1;
 		$cols = $_;
-		$cols =~ s/^\s*([0-9A-F]{2})\s*(.*)\s*$/$2/;
+		$cols =~ s/^\s*([0-9A-F]{2,6})\s*(.*)\s*$/$2/;
 		$cols =~ tr/,//d;
 		@cols = split(/\s+/, $cols);
 		for (@cols) {
