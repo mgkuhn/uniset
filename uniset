@@ -2,7 +2,7 @@
 # Uniset -- Unicode subset manager -- Markus Kuhn <mkuhn@acm.org>
 
 print <<End if $#ARGV < 0;
-Uniset 1.0 -- Unicode subset manager -- Markus Kuhn <mkuhn\@acm.org>
+Uniset 1.2 -- Unicode subset manager -- Markus Kuhn <mkuhn\@acm.org>
 
 Uniset allows to merge and subtract Unicode subsets. It can output and
 analyse the resulting set in various formats.
@@ -11,19 +11,24 @@ The following commands can be supplied to uniset on the command line:
 
 Commands to define a set of characters:
 
-  +filename    add the character set described in the file to the set
-  -filename    remove the character set described in the file from the set
+  + filename   add the character set described in the file to the set
+  - filename   remove the character set described in the file from the set
+  +: filename  add the characters in the UTF-8 file to the set
+  -: filename  remove the characters in the UTF-8 file from the set
   +xxxx-yyyy   add the range to the set (xxxx and yyyy are hex numbers)
   -xxxx-yyyy   remove the range to the set (xxxx and yyyy are hex numbers)
-  clean        remove and elements that do not appear in the Unicode database
+  clean        remove any elements that do not appear in the Unicode database
+  unknown      remove any elements that do appear in the Unicode database
 
 Command to output descriptions of the constructed set of characters:
 
   table        write a full table with one line per character
   compact      output the set in compact MES format
+  c            output the set as C interval array
   nr           output the number of characters
   sources      output a table that shows the number of characters contributed
                by the various combinations of input sets added with +.
+  utf8-list    output a list of all characters encoded in UTF-8
 
 Commands to tailor the following output commands:
 
@@ -67,25 +72,146 @@ xx yy yy yy-yy yy   xx denotes a row (high-byte) and the yy specify
 End
 exit 1 if $#ARGV < 0;
 
+
+# subroutine to convert an integer into a UTF-8 string
+
+sub utf8 ($) {
+    my $c = shift(@_);
+
+    if ($c < 0x80) {
+        return sprintf("%c", $c);
+    } elsif ($c < 0x800) {
+        return sprintf("%c%c", 0xc0 | ($c >> 6), 0x80 | ($c & 0x3f));
+    } elsif ($c < 0x10000) {
+        return sprintf("%c%c%c",
+                       0xe0 |  ($c >> 12),
+                       0x80 | (($c >>  6) & 0x3f),
+                       0x80 | ( $c        & 0x3f));
+    } elsif ($c < 0x200000) {
+        return sprintf("%c%c%c%c",
+                       0xf0 |  ($c >> 18),
+                       0x80 | (($c >> 12) & 0x3f),
+                       0x80 | (($c >>  6) & 0x3f),
+                       0x80 | ( $c        & 0x3f));
+    } elsif ($c < 0x4000000) {
+        return sprintf("%c%c%c%c%c",
+                       0xf8 |  ($c >> 24),
+                       0x80 | (($c >> 18) & 0x3f),
+                       0x80 | (($c >> 12) & 0x3f),
+                       0x80 | (($c >>  6) & 0x3f),
+                       0x80 | ( $c        & 0x3f));
+
+    } elsif ($c < 0x80000000) {
+        return sprintf("%c%c%c%c%c%c",
+                       0xfe |  ($c >> 30),
+                       0x80 | (($c >> 24) & 0x3f),
+                       0x80 | (($c >> 18) & 0x3f),
+                       0x80 | (($c >> 12) & 0x3f),
+                       0x80 | (($c >> 6)  & 0x3f),
+                       0x80 | ( $c        & 0x3f));
+    } else {
+        return utf8(0xfffd);
+    }
+}
+
+# Remove first UTF-8 character from first argument and return
+# it as an integer. Warning: Also accepts overlong UTF-8 sequences.
+
+sub parse_utf8 ($) {
+    my $first = ord($_[0]);
+    my $mask = 0x40;
+
+    $_[0] = substr($_[0], 1);
+
+    return $first if $first < 0x80;
+    return 0xfffd if (($first < 0xc0) || ($first > 0xfd));
+
+    $first &= 0x7f;
+    while ($first & $mask) {
+	$first = ($first & ~$mask) << 6 | (ord($_[0]) & 0x3f);
+	$mask <<= 5;
+	$_[0] = substr($_[0], 1);
+    }
+
+    return $first;
+}
+
+# Subroutine to identify whether the ISO 10646/Unicode character code
+# ucs belongs into the East Asian Wide (W) or East Asian FullWidth
+# (F) category as defined in Unicode Technical Report #11.
+
+sub iswide ($) {
+    my $ucs = shift(@_);
+
+    if ($ucs < 0x1100) {
+	return 0;
+    }
+
+    return (($ucs >= 0x1100 && $ucs <= 0x115f) || # Hangul Jamo
+	    ($ucs >= 0x2e80 && $ucs <= 0xa4cf && $ucs != 0x303f) || # CJK .. Yi
+	    ($ucs >= 0xac00 && $ucs <= 0xd7a3) || # Hangul Syllables
+	    ($ucs >= 0xf900 && $ucs <= 0xfaff) || # CJK Comp. Ideographs
+	    ($ucs >= 0xfe30 && $ucs <= 0xfe6f) || # CJK Comp. Forms
+	    ($ucs >= 0xff00 && $ucs <= 0xff5f) || # Fullwidth Forms
+	    ($ucs >= 0xffe0 && $ucs <= 0xffe6));
+}
+
+
 $html = 0;
 $image = 0;
 $ucs = 0;
 $unicodedata = "UnicodeData-Latest.txt";
+$blockdata = "Blocks.txt";
+$datadir = "$ENV{HOME}/local/lib/ucs";
 
 # read list of all Unicode names
-if (!open(UDATA, $unicodedata)) {
+if (!open(UDATA, $unicodedata) && !open(UDATA, "$datadir/$unicodedata")) {
     die ("Can't open Unicode database '$unicodedata':\n$!\n\n" .
 	 "Please make sure that you have downloaded the file\n" .
 	 "ftp://ftp.unicode.org/Public/UNIDATA/UnicodeData-Latest.txt\n");
 }
 while (<UDATA>) {
-    if (/^([0-9,A-F]{4});([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*)$/) {
+    if (/^([0-9,A-F]{4,8});([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*);([^;]*)$/) {
+	next if length($1) > 4 || $2 =~ /^</;
         $name{$1} = $2;
 	$invname{$2} = $1;
+	$category{$1} = $3;
         $comment{$1} = $12;
     } else {
         die("Syntax error in line '$_' in file '$unicodedata'");
     }
+}
+close(UDATA);
+
+# read list of all Unicode blocks
+if (!open(UDATA, $blockdata) && !open(UDATA, "$datadir/$blockdata")) {
+    die ("Can't open Unicode blockname list '$blockdata':\n$!\n\n" .
+	 "Please make sure that you have downloaded the file\n" .
+	 "ftp://ftp.unicode.org/Public/UNIDATA/BLOCKS.TXT\n");
+}
+$blocks = 0;
+while (<UDATA>) {
+    if (/^\s*([0-9,A-F]{4});\s*([0-9,A-F]{4});\s*(.*)$/) {
+        $blockstart[$blocks] = hex($1);
+	$blockend  [$blocks] = hex($2);
+        $blockname [$blocks] = $3;
+	$blocks++;
+    } elsif (/^\s*\#/ || /^\s*$/) {
+	# ignore comments and empty lines
+    } else {
+        die("Syntax error in line '$_' in file '$blockdata'");
+    }
+}
+close(UDATA);
+if ($blockend[$blocks-1] < 0x10000) {
+    $blockstart[$blocks] = 0x10000;
+    $blockend  [$blocks] = 0x1FFFF;
+    $blockname [$blocks] = "Plane 1";
+    $blocks++;
+    $blockstart[$blocks] = 0x20000;
+    $blockend  [$blocks] = 0x1FFFFFFF;
+    $blockname [$blocks] = "Beyond Plane 1";
+    $blocks++;
 }
 
 while (<UDATA>) {
@@ -96,6 +222,8 @@ while (<UDATA>) {
 while ($_ = shift(@ARGV)) {
     if (/^html$/) {
 	$html = 1;
+    } elsif (/^ucs$/) {
+	$ucs = 1;
     } elsif (/^img$/) {
 	$html = 1;
 	$image = 1;
@@ -109,15 +237,39 @@ while ($_ = shift(@ARGV)) {
 		    print $_;
 		}
 		close(INCLUDE);
+	    } elsif (/^\#\s*quote\s+\"([^\"]*)\"\s*$/) {
+		open(INCLUDE, $1) || die("Can't open template include file '$1': '$!'");
+		while (<INCLUDE>) {
+		    s/&/&amp;/g;
+		    s/</&lt;/g;
+		    print $_;
+		}
+		close(INCLUDE);
 	    } else {
 		print $_;
 	    }
 	}
 	close(TEMPLATE);
-    } elsif (/^([+-])(.*)/) {
-	push(@SETS, $_);
+    } elsif (/^([+-]):(.*)/) {
 	$remove = $1 eq "-";
 	$setfile = $2;
+	$setfile = shift(@ARGV) if $setfile eq "";
+	push(@SETS, $setfile);
+	open(SET, $setfile) || die("Can't open set file '$setfile': '$!'");
+	$setname = $setfile;
+	while (<SET>) {
+	    while ($_) {
+		$i = parse_utf8($_);
+		$used{sprintf("%04X", $i)} .= "[${setname}]" unless $remove;
+		delete $used{sprintf("%04X", $i)} if $remove;
+	    }
+	}
+	close SET;
+    } elsif (/^([+-])(.*)/) {
+	$remove = $1 eq "-";
+	$setfile = $2;
+	$setfile = shift(@ARGV) if $setfile eq "";
+	push(@SETS, $setfile);
 	if ($setfile =~ /^([0-9A-Fa-f]{4})-([0-9A-Fa-f]{4})$/) {
 	    # handle intervall specification on command line
 	    $first = hex($1);
@@ -151,11 +303,22 @@ while ($_ = shift(@ARGV)) {
 			#ignore
 		    } elsif (/^<.*>\s*\/x([0-9A-F]{2})\s*<U([0-9A-F]{4})>/) {
 			$used{$2} .= "[${setname}{$1}]" unless $remove;
-			delete $used{$unicode} if $remove;
+			delete $used{$2} if $remove;
 		    } else {
 			die("Syntax error in line $. in file '$setfile':\n'$_'\n");
 		    }
 		}
+		next;
+	    } elsif (/^STARTFONT /) {
+		# handle X11 BDF file
+		while (<SET>) {
+		    if (/^ENCODING\s+([0-9]+)/) { 
+			$unicode = sprintf("%04X",$1);
+			$used{$unicode} .= "[${setname}]" unless $remove;
+			delete $used{$unicode} if $remove;
+		    }
+		}
+		next;
 	    }
 	    tr/a-z/A-Z/;           # make input uppercase
 	    if ($cedf) {
@@ -179,7 +342,7 @@ while ($_ = shift(@ARGV)) {
 	    }
 	    s/^([^\#]*)\#.*$/$1/;  # remove comments
 	    next if (/^\032?\s*$/);     # skip empty lines
-	    if (/^\s*(0X)?([0-9A-F]{2})\s+(0X|U\+|U-)?([0-9A-F]{4})\s*$/) {
+	    if (/^\s*(0X)?([0-9A-F-]{2})\s+(0X|U\+|U-)?([0-9A-F]{4})\s*$/) {
 		# handle entry from a ftp.unicode.org mapping file
 		$used{$4} .= "[${setname}{$2}]" unless $remove;
 		delete $used{$4} if $remove;
@@ -308,7 +471,9 @@ while ($_ = shift(@ARGV)) {
 		print " ($comment{$i})" if $comment{$i};
 		print "</SAMP><TD><SMALL>$sources</SMALL>\n";
 	    } else {
-		print "$i # $name{$i}\n";
+		print "$i \# ";
+		print utf8(hex($i)) . " " if $ucs;
+		print "$name{$i}\n";
 	    }
 	}
 	print "</TABLE>\n" if $html;
@@ -334,7 +499,7 @@ while ($_ = shift(@ARGV)) {
 	}
 	print "<TR align=center>$subline" if ($col > 0);
 	print "</TABLE>\n";
-    } elsif (/^source$/) {
+    } elsif (/^sources$/) {
 	# count how many characters are attributed to the various source set combinations
 	print "<P>Number of occurences of source character set combinations:\n<TABLE border=2>" if $html;
 	for $i (keys(%used)) {
@@ -403,6 +568,87 @@ while ($_ = shift(@ARGV)) {
 	print "\n" if ($current_row ne '');
 	print "</TABLE>\n" if $html;
 	print "\n";
+    } elsif (/^c$/) {
+	# print table as C interval array
+	print "{";
+	$last_i = '';
+	$columns = 3;
+	$col = $columns;
+	for $i (sort(keys(%used))) {
+	    next if ($name{$i} eq "<control>");
+	    if ($last_i eq '') {
+		if (++$col > $columns) { $col = 1; print "\n "; }
+		print " { 0x$i, ";
+		$last_i = $i;
+	    } elsif (hex($i) == hex($last_i) + 1) {
+		$last_i = $i;
+	    } else {
+		print "0x$last_i },";
+		if (++$col > $columns) { $col = 1; print "\n "; }
+		print " { 0x$i, ";
+		$last_i = $i;
+	    }
+	}
+	if ($last_i ne '') {
+	    print "0x$last_i }\n";
+	}
+	print "};\n";
+    } elsif (/^utf8-list$/) {
+	$col = 0;
+	$block = 0;
+	$last = -1;
+	for $i (sort(keys(%used))) {
+	    $ii = hex($i);
+	    #next if ($name{$i} eq "<control>");
+	    while ($blockend[$block] < $ii && $block < $blocks - 1) {
+		$block++;
+	    }
+	    if ($last <= $blockend[$block-1] &&
+		$ii < $blockstart[$block]) {
+		print "\n" if ($col);
+		printf "\nFree block (U+%04X-U+%04X):\n\n",
+		    $blockend[$block-1] + 1, $blockstart[$block] - 1;
+		$col = 0;
+	    }
+	    if ($last < $blockstart[$block] && $ii >= $blockstart[$block]) {
+		print "\n" if ($col);
+		printf "\n$blockname[$block] (U+%04X-U+%04X):\n\n",
+		$blockstart[$block], $blockend[$block];
+		$col = 0;
+	    }
+	    if ($category{$i} eq 'Mn') {
+		# prefix non-spacing character with U+25CC DOTTED CIRCLE
+		print utf8(0x25CC);
+	    } elsif ($category{$i} eq 'Me') {
+		# prefix enclosing non-spacing character with space
+		print " ";
+	    }
+	    print utf8($ii);
+	    $col += 1 + iswide($ii);
+	    if ($col >= 64) {
+		print "\n";
+		$col = 0;
+	    }
+	    $last = $ii;
+	}
+	print "\n" if ($col);
+    } elsif (/^collections$/) {
+	$block = 0;
+	$last = -1;
+	for $i (sort(keys(%used))) {
+	    $ii = hex($i);
+	    next if ($name{$i} eq "<control>");
+	    while ($blockend[$block] < $ii && $block < $blocks - 1) {
+		$block++;
+	    }
+	    if ($last < $blockstart[$block] && $ii >= $blockstart[$block]) {
+		print $blockname[$block],
+		  " " x (40 - length($blockname[$block]));
+		printf "%04X-%04X\n",
+		  $blockstart[$block], $blockend[$block];
+	    }
+	    $last = $ii;
+	}
     } elsif (/^nr$/) {
 	print "<P>" if $html;
 	print "# " unless $html;
@@ -417,6 +663,11 @@ while ($_ = shift(@ARGV)) {
 	# remove characters from set that are not in $unicodedata
 	for $i (keys(%used)) {
 	    delete $used{$i} unless $name{$i};
+	}
+    } elsif (/^unknown$/) {
+	# remove characters from set that are in $unicodedata
+	for $i (keys(%used)) {
+	    delete $used{$i} if $name{$i};
 	}
     } else {
 	die("Unknown command line command '$_'");
