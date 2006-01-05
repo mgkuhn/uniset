@@ -77,8 +77,8 @@
 2289 # NEITHER A SUPERSET OF NOR EQUAL TO
 228A # SUBSET OF WITH NOT EQUAL TO
 228B # SUPERSET OF WITH NOT EQUAL TO
-2329 # LEFT-POINTING ANGLE BRACKET       
-232A # RIGHT-POINTING ANGLE BRACKET      
+27E8 # MATHEMATICAL LEFT ANGLE BRACKET
+27E9 # MATHEMATICAL RIGHT ANGLE BRACKET
 
 # common number theory symbols
 
@@ -116,8 +116,7 @@
 2245 # APPROXIMATELY EQUAL TO            
 2248 # ALMOST EQUAL TO                   
 2249 # NOT ALMOST EQUAL TO               
-2258 # CORRESPONDS TO             # an equal sign with a circumflex (not an
-                                  # inverted breve as shown in Unicode!)
+2259 # ESTIMATES                  # = corresponds to
 2260 # NOT EQUAL TO
 2264 # LESS-THAN OR EQUAL TO             
 2265 # GREATER-THAN OR EQUAL TO          
