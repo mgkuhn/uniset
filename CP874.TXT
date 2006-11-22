@@ -5,8 +5,8 @@
 #    Table format:  Format A
 #    Date:          04/15/98
 #
-#    Contact:       cpxlate@microsoft.com
-#
+#    Contact: Shawn.Steele@microsoft.com
+#                   
 #    General notes: none
 #
 #    Format: Three tab-separated columns
