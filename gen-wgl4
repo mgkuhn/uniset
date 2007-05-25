@@ -4,9 +4,11 @@
 
 if (1) {
     #$source='http://www.adobe.com/supportservice/devrelations/opentype/';
-    $source='http://partners.adobe.com/asn/tech/type/opentype/appendices/';
-    $intro='wgl4.jsp';
-    @tables=('wgl4b.jsp', 'wgl4c.jsp', 'wgl4d.jsp', 'wgl4e.jsp');
+    #$source='http://partners.adobe.com/asn/tech/type/opentype/appendices/';
+    $source='http://partners.adobe.com/public/developer/opentype/';
+    $intro='index_wgl.html';
+    @tables=('index_wgl1.html', 'index_wgl2.html',
+	     'index_wgl3.html', 'index_wgl4.html' );
 } else {
     $source='http://www.microsoft.com/typography/OTSPEC/';
     $intro='WGL4.HTM';
@@ -34,7 +36,7 @@ print "# <$source$intro>.\n";
 $count = 0;
 for $table (@tables) {
     print STDERR "loading $source$table\n";
-    open(WGL4, "webcopy -o $source$table |") || die "Can't call 'webcopy'";
+    open(WGL4, "wget -O - $source$table |") || die "Can't call 'wget'";
     while (<WGL4>) {
 	if (/^\s*<td.*>\s*U\+([0-9a-f]{4})\s*(<\/td>)?\s*$/) {
 	    $ucs = hex($1);
