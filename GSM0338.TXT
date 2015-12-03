@@ -1,28 +1,16 @@
+# GSM0338.TXT
+# Date: 2015-12-02 23:55:00 GMT [KW]
+# © 2015 Unicode®, Inc.
+# For terms of use, see http://www.unicode.org/terms_of_use.html
 #
 #	Name:             GSM 03.38 to Unicode
-#	Unicode version:  3.2
-#	Table version:    1.2
+#	Unicode version:  3.0
+#	Table version:    2.0
 #	Table format:     Format A
-#	Date:             2002 April 5
-#	Authors:          Ken Whistler <ken@unicode.org>,
-#                         Kent Karlsson <keka@im.se>,
-#                         Markus Kuhn <mkuhn@acm.org>
-#
-#	Copyright (c) 2000-2002 Unicode, Inc.  All Rights reserved.
-#
-#	This file is provided as-is by Unicode, Inc. (The Unicode Consortium).
-#	No claims are made as to fitness for any particular purpose.  No
-#	warranties of any kind are expressed or implied.  The recipient
-#	agrees to determine applicability of information provided.  If this
-#	file has been provided on optical media by Unicode, Inc., the sole
-#	remedy for any claim will be exchange of defective media within 90
-#	days of receipt.
-#
-#	Unicode, Inc. hereby grants the right to freely use the information
-#	supplied in this file in the creation of products supporting the
-#	Unicode Standard, and to make copies of this file in any form for
-#	internal or external distribution as long as this notice remains
-#	attached.
+#	Date:             2009 Nov 10 (header updated: 2015 December 02)
+#	Authors:          Ken Whistler
+#                         Kent Karlsson
+#                         Markus Kuhn
 #
 #	General notes:
 #
@@ -30,7 +18,7 @@
 #       ETSI GSM 03.38 7-bit default alphabet characters map into Unicode.
 #	This mapping is based on ETSI TS 100 900 V7.2.0 (1999-07), with
 #	a correction of 0x09 to *small* c-cedilla, instead of *capital*
-#	C-cedilla. http://www.etsi.org/
+#	C-cedilla.
 #
 #	Format:  Three tab-separated columns
 #		 Column #1 is the ETSI GSM 03.38 7-bit default alphabet 
@@ -54,14 +42,14 @@
 #       The ETSI GSM 03.38 specification shows an uppercase C-cedilla
 #       glyph at 0x09. This may be the result of limited display
 #       capabilities for handling characters with descenders. However, the
-#       language coverage intent is clearly for the lowercase c-cedilla, as
-#       shown in the mapping below. The mapping for uppercase C-cedilla is
-#       shown in a commented line in the mapping table.
+#       language coverage intent is clearly for the lowercase c-cedilla, as shown
+#       in the mapping below. The mapping for uppercase C-cedilla is shown
+#       in a commented line in the mapping table.
 #
-#       The ESC character 0x1B is mapped to the no-break space character,
-#	unless it is part of a valid ESC sequence, to facilitate
-#	round-trip compatibility in the presence of unknown ESC
-#	sequences.
+#	The ESC character 0x1B is
+#	mapped to the no-break space character, unless it is part of a
+#	valid ESC sequence, to facilitate round-trip compatibility in
+#	the presence of unknown ESC sequences.
 #
 #	0x00 is NULL (when followed only by 0x00 up to the
 #	end of (fixed byte length) message, possibly also up to
@@ -75,14 +63,16 @@
 #			added text regarding 0x00's interpretation,
 #                       added second mapping for C-cedilla,
 #                       added mapping of 0x1B escape to NBSP for display.
-#       1.2 version: fixed mapping of GREEK CAPITAL LETTER UPSILON
+#   1.2 version: fixed fallback mapping for 0x03A5.
+#
+#   2.0 version: updates to copyright notice and terms of use; no
+#       changes to character mappings
 #
 #	Updated versions of this file may be found in:
-#		<ftp://ftp.unicode.org/Public/MAPPINGS/>
+#		http://www.unicode.org/Public/MAPPINGS/
 #
-#	Any comments or problems, contact <errata@unicode.org>
-#	Please note that <errata@unicode.org> is an archival address;
-#	notices will be checked, but do not expect an immediate response.
+#	Any comments or problems, contact us at:
+#       http://www.unicode.org/reporting.html
 #
 0x00	0x0040	#	COMMERCIAL AT
 #0x00	0x0000	#	NULL (see note above)
