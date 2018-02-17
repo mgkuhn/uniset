@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 # Uniset -- Unicode subset manager -- Markus Kuhn
 # http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz
-# $Id: uniset,v 1.21 2004-04-10 20:19:39 mgk25 Exp $
 
 require 5.008;
 use open ':utf8';
