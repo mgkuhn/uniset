@@ -128,7 +128,7 @@ PS-MINIMUM:
 ##########################################################################
 
 CP437 CP850 SAMI KOI8-R:
-	$(RETRIEVE) ftp://dkuug.dk/i18n/WG15-collection/charmaps/$@
+	$(RETRIEVE) http://std.dkuug.dk/i18n/WG15-collection/charmaps/$@
 
 CP1004 CP1252:
 	$(RETRIEVE) http://wwwold.dkuug.dk/i18n/charmaps/$@
