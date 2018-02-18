@@ -1,5 +1,5 @@
-# MES-3B from http://www.stri.is/ISSS-WS/MES/mes%20N023%20Final%20text.pdf
-# 2000-03-02
+# MES-3B from CWA 13873:2000
+# http://www.evertype.com/standards/iso10646/pdf/cwa13873.pdf
 00  20-7E A0-FF
 01  00-FF
 02  00-1F 22-33 50-AD B0-EE

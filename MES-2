@@ -1,5 +1,5 @@
-# MES-2 from http://www.stri.is/ISSS-WS/MES/mes%20N023%20Final%20text.pdf
-# 2000-03-02
+# MES-2 from CWA 13873:2000
+# http://www.evertype.com/standards/iso10646/pdf/cwa13873.pdf
 00  20-7E A0-FF
 01  00-7F 8F 92 B7 DE-EF FA-FF
 02  18-1B 1E-1F 59 7C 92 BB-BD C6-C7 C9 D8-DD EE
