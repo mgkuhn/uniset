@@ -62,8 +62,8 @@ allclean: clean
 
 
 MES-3A: UnicodeData.txt
-	echo "# MES-3A from http://www.stri.is/ISSS-WS/MES/mes%20N023%20Final%20text.pdf" >MES-3A
-	echo "# 2000-03-02" >>MES-3A
+	echo "# MES-3A from CWA 13873:2000" >MES-3A
+	echo "# http://www.evertype.com/standards/iso10646/pdf/cwa13873.pdf" >>MES-3A
 	./uniset \
 	+0020..007E +00A0..00FF +0100..017F +0180..024F +0250..02AF \
 	+02B0..02FF +0300..036F +0370..03CF +03D0..03FF +0400..04FF \
