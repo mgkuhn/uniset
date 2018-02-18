@@ -42,14 +42,13 @@ UNISET_FILES = 00README uniset gen-wgl4 $(LOCAL_CHARFILES) \
 all: $(UNISET_FILES)
 
 distribution: $(UNISET_FILES)
-	git diff --exit-code HEAD -- $(UNISET_FILES)
-	tar cvf uniset.tar $(UNISET_FILES)
-	gzip -9f uniset.tar
-	mv uniset.tar.gz $(HOME)/.www/download/
-	cp uniset $(HOME)/local/bin/
+	git diff --exit-code master -- $(UNISET_FILES)
+	git archive -o uniset.tar.gz master $(UNISET_FILES)
+	rsync -t --remove-source-files uniset.tar.gz \
+	  slogin.cl.cam.ac.uk:public_html/download/
 
 clean:
-	rm -f *~ W.log core *.o
+	rm -f *~
 
 allclean: clean
 	rm -f $(REMOTE_CHARFILES)
