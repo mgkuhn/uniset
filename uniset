@@ -110,25 +110,25 @@ my @tname = ('G', 'GG', 'GS', 'N', 'NJ', 'NH', 'D', 'L', 'LG', 'LM',
 
 sub name {
     my $ucs = shift(@_);
-    
+
     # The intervals used here reflect Unicode Version 3.2
     if (($ucs >=  0x3400 && $ucs <=  0x4db5) ||
 	($ucs >=  0x4e00 && $ucs <=  0x9fa5) ||
 	($ucs >= 0x20000 && $ucs <= 0x2a6d6)) {
 	return "CJK UNIFIED IDEOGRAPH-" . sprintf("%04X", $ucs);
     }
-    
+
     if ($ucs >= 0xac00 && $ucs <= 0xd7a3) {
 	my $s = $ucs - 0xac00;
 	my $l = 0x1100 + int($s / (21 * 28));
 	my $v = 0x1161 + int(($s % (21 * 28)) / 28);
 	my $t = 0x11a7 + $s % 28;
-	return "HANGUL SYLLABLE " . 
+	return "HANGUL SYLLABLE " .
 	    ($lname[int($s / (21 * 28))] .
 	     $vname[int(($s % (21 * 28)) / 28)] .
 	     $tname[$s % 28 - 1]);
     }
-    
+
     return $name{$ucs};
 }
 
@@ -142,7 +142,7 @@ sub is_unicode {
 	($ucs >= 0x20000 && $ucs <= 0x2a6d6)) {
 	return 1;
     }
-    
+
     return exists $name{$ucs};
 }
 
@@ -316,7 +316,7 @@ while ($_ = shift(@ARGV)) {
 	    } elsif (/^STARTFONT /) {
 		# handle X11 BDF file
 		while (<SET>) {
-		    if (/^ENCODING\s+([0-9]+)/) { 
+		    if (/^ENCODING\s+([0-9]+)/) {
 			$used{$1} .= "[${setname}]" unless $remove;
 			delete $used{$1} if $remove;
 		    }
