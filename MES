@@ -1,5 +1,5 @@
 # Minimum European Subset of ISO/IEC 10646-1 defined in ENV 1973:1995
-# as found on <http://www.indigo.ie/egt/standards/mes.html>
+# http://www.evertype.com/standards/mes.html
 0020 # SPACE
 0021 # EXCLAMATION MARK
 0022 # QUOTATION MARK
@@ -925,4 +925,4 @@
 266A # EIGHTH NOTE
 266B # BEAMED EIGHTH NOTES
 FB01 # LATIN SMALL LIGATURE FI
-FB02 # LATIN SMALL LIGATURE FL 
+FB02 # LATIN SMALL LIGATURE FL
