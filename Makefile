@@ -1,12 +1,9 @@
 # GNU Makefile for the uniset package
 # Markus Kuhn <http://www.cl.cam.ac.uk/~mgk25/>
 
-CC=gcc
-CFLAGS=-W -Wall -O -g
+.DELETE_ON_ERROR:
 
 # Command to get source packages over the network
-
-#RETRIEVE=@echo Please get over the Internet the file ; echo 
 RETRIEVE=wget
 REMOVECR=perl -p -i -e 's/\r$$//;'
 
@@ -27,7 +24,9 @@ NEXTSTEP.TXT IBMGRAPH.TXT \
 SAMI CP437 CP850 \
 stdenc.txt symbol.txt zdingbat.txt
 
-GENERATED_CHARFILES = WGL4 MES-3A WIDTH-[AFHNWX] X11-MINIMUM
+GENERATED_CHARFILES = WGL4 MES-3A \
+WIDTH-A WIDTH-F WIDTH-H WIDTH-N WIDTH-Na WIDTH-W \
+X11-MINIMUM
 
 # character set files original in this package
 
@@ -43,7 +42,7 @@ UNISET_FILES = 00README uniset gen-wgl4 $(LOCAL_CHARFILES) \
 all: $(UNISET_FILES)
 
 distribution: $(UNISET_FILES)
-	rcsdiff RCS/*
+	git diff --exit-code HEAD -- $(UNISET_FILES)
 	tar cvf uniset.tar $(UNISET_FILES)
 	gzip -9f uniset.tar
 	mv uniset.tar.gz $(HOME)/.www/download/
@@ -65,7 +64,7 @@ allclean: clean
 MES-3A: UnicodeData.txt
 	echo "# MES-3A from http://www.stri.is/ISSS-WS/MES/mes%20N023%20Final%20text.pdf" >MES-3A
 	echo "# 2000-03-02" >>MES-3A
-	uniset \
+	./uniset \
 	+0020..007E +00A0..00FF +0100..017F +0180..024F +0250..02AF \
 	+02B0..02FF +0300..036F +0370..03CF +03D0..03FF +0400..04FF \
 	+0530..058F +10D0..10FF +1E00..1EFF +1F00..1FFF +2000..206F \
@@ -80,45 +79,45 @@ WGL4: UnicodeData.txt gen-wgl4
 WIDTH-F: EastAsianWidth.txt
 	echo "# UAX #11: EastAsianWidth Full-width" > $@
 	perl -ne 'print "$$1\n" if /^([a-fA-F0-9\.]+);F\s*(\#.*)$$/;' < $< | \
-	uniset + - compact >> $@
+	./uniset + - compact >> $@
 
 WIDTH-H: EastAsianWidth.txt
 	echo "# UAX #11: East Asian Half-width" > $@
 	perl -ne 'print "$$1\n" if /^([a-fA-F0-9\.]+);H\s*(\#.*)$$/;' < $< | \
-	uniset + - compact >> $@
+	./uniset + - compact >> $@
 
 WIDTH-W: EastAsianWidth.txt
 	echo "# UAX #11: East Asian Wide" > $@
 	perl -ne 'print "$$1\n" if /^([a-fA-F0-9\.]+);W\s*(\#.*)$$/;' < $< | \
-	uniset + - compact >> $@
+	./uniset + - compact >> $@
 
 WIDTH-Na: EastAsianWidth.txt
 	echo "# UAX #11: East Asian Narrow" > $@
 	perl -ne 'print "$$1\n" if /^([a-fA-F0-9\.]+);Na\s*(\#.*)$$/;' < $< | \
-	uniset + - compact >> $@
+	./uniset + - compact >> $@
 
 WIDTH-N: EastAsianWidth.txt
 	echo "# UAX #11: East Asian Neutral" > $@
 	perl -ne 'print "$$1\n" if /^([a-fA-F0-9\.]+);N\s*(\#.*)$$/;' < $< | \
-	uniset + - compact >> $@
+	./uniset + - compact >> $@
 
 WIDTH-A: EastAsianWidth.txt
 	echo "# UAX #11: East Asian Ambiguous" > $@
 	perl -ne 'print "$$1\n" if /^([a-fA-F0-9\.]+);A\s*(\#.*)$$/;' < $< | \
-	uniset + - compact >> $@
+	./uniset + - compact >> $@
 
 X11-MINIMUM: WGL4
 	echo "# Minimum repertoire of ANY *-ISO10646-1 X11 font" > $@
 	echo "# (subset of WGL4, superset of CP1252 and" \
 	"ISO 8859-{1-4,9,10,13,15}" >> $@
-	uniset + WGL4 -017F..FFFF \
+	./uniset + WGL4 -017F..FFFF \
 	+ 8859-1.TXT + 8859-2.TXT + 8859-3.TXT + 8859-4.TXT \
 	+ 8859-9.TXT + 8859-10.TXT + 8859-13.TXT + 8859-15.TXT + CP1252.TXT \
 	compact nr >> $@
 
 PS-MINIMUM:
 	echo "# Minimum repertoire of any PostScript driver" > $@
-	uniset + ../font/adobe/75dpi/timR12.bdf + stdenc.txt + symbol.txt \
+	./uniset + ../font/adobe/75dpi/timR12.bdf + stdenc.txt + symbol.txt \
         +27e8-27e9 + CP1252.TXT clean ucs table nr >>$@
 
 ##########################################################################
