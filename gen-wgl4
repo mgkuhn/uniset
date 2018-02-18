@@ -2,7 +2,7 @@
 # Generate an ASCII listing of the Microsoft/Adobe WGL4.0 Character Set
 # Markus Kuhn <http://www.cl.cam.ac.uk/~mgk25/>
 
-if (1) {
+if (0) {
     #$source='http://www.adobe.com/supportservice/devrelations/opentype/';
     #$source='http://partners.adobe.com/asn/tech/type/opentype/appendices/';
     $source='http://partners.adobe.com/public/developer/opentype/';
@@ -10,9 +10,9 @@ if (1) {
     @tables=('index_wgl1.html', 'index_wgl2.html',
 	     'index_wgl3.html', 'index_wgl4.html' );
 } else {
-    $source='http://www.microsoft.com/typography/OTSPEC/';
-    $intro='WGL4.HTM';
-    @tables=('WGL4B.HTM', 'WGL4C.HTM', 'WGL4D.HTM', 'WGL4E.HTM');
+    $source='https://docs.microsoft.com/en-gb/typography/opentype/spec/';
+    $intro='wgl4';
+    @tables=('wgl4b', 'wgl4c', 'wgl4d', 'wgl4e');
 }
 
 $unicodedata = "UnicodeData.txt";
@@ -38,7 +38,7 @@ for $table (@tables) {
     print STDERR "loading $source$table\n";
     open(WGL4, "wget -O - $source$table |") || die "Can't call 'wget'";
     while (<WGL4>) {
-	if (/^\s*<td.*>\s*U\+([0-9a-f]{4})\s*(<\/td>)?\s*$/) {
+	if (/^\s*<td.*>\s*U\+([0-9a-fA-F]{4})\s*(<\/td>)?\s*$/) {
 	    $ucs = hex($1);
 	    printf("0x%04X\t# %s\n", $ucs, $name{$ucs});
 	    $count++;
@@ -47,4 +47,6 @@ for $table (@tables) {
     close(WGL4);
 }
 print "# $count characters in above table\n";
-printf STDERR "Warning: found $count characters, expected 653!\n" if ($count != 653);
+my $expected = 657;
+warn "Warning: found $count characters, expected $expected!\n"
+    if $count != $expected;
