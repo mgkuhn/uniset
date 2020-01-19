@@ -147,11 +147,12 @@ sub is_unicode {
     return exists $name{$ucs};
 }
 
-my @search_path;
-push @search_path, "$ENV{HOME}/local/share/uniset"
-    if -d "$ENV{HOME}/local/share/uniset";
-push @search_path, "/usr/share/uniset" if -d "/usr/share/uniset";
-push @search_path, $RealBin unless $RealBin =~ m|^/usr/bin|;
+my @search_path = ();
+if ($RealBin =~ m|^(.*)/bin/uniset\z| && -d "$1/share/uniset") {
+    push @search_path, "$1/share/uniset";
+} else {
+    push @search_path, $RealBin;
+}
 
 sub search_open {
     my ($mode, $fn) = @_;

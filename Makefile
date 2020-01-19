@@ -49,6 +49,21 @@ distribution: $(UNISET_FILES)
 	rsync -t --remove-source-files uniset.tar.gz \
 	  slogin.cl.cam.ac.uk:public_html/download/
 
+DESTDIR = /usr/local
+BINDIR  = $(DESTDIR)/bin
+DATADIR = $(DESTDIR)/share/uniset
+COPY    = rsync
+
+install: uniset $(UNISET_CHARFILES)
+	mkdir -p $(BINDIR) $(DATADIR)
+	$(COPY) uniset $(BINDIR)/
+	$(COPY) $(UNISET_CHARFILES) $(DATADIR)/
+
+uninstall:
+	rm -f $(BINDIR)/uniset
+	rm -f $(DATADIR)/*
+	rmdir $(DATADIR)
+
 clean:
 	rm -f *~
 
