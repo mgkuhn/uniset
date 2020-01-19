@@ -2,7 +2,7 @@
 # Uniset -- Unicode subset manager -- Markus Kuhn
 # http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz
 
-require 5.008;
+require 5.014;
 use open ':utf8';
 use FindBin qw($RealBin);  # to find directory where this file is located
 
@@ -187,7 +187,7 @@ while (<$data>) {
 	$category{$ucs} = $3;
         $comment{$ucs} = $12;
     } else {
-        die("Syntax error in line '$_' in file '$unicodedata'");
+        die("Syntax error in line '$_' in file '$unicodedata'\n");
     }
 }
 close($data);
@@ -210,7 +210,7 @@ while (<$data>) {
     } elsif (/^\s*\#/ || /^\s*$/) {
 	# ignore comments and empty lines
     } else {
-        die("Syntax error in line '$_' in file '$blockdata'");
+        die("Syntax error in line '$_' in file '$blockdata'\n");
     }
 }
 close($data);
@@ -232,16 +232,16 @@ while ($_ = shift(@ARGV)) {
 	$image = 1;
     } elsif (/^template$/) {
 	$template = shift(@ARGV);
-	open(TEMPLATE, $template) || die("Can't open template file '$template': '$!'");
+	open(TEMPLATE, $template) || die("Can't open template file '$template': $!\n");
 	while (<TEMPLATE>) {
 	    if (/^\#\s*include\s+\"([^\"]*)\"\s*$/) {
-		open(INCLUDE, $1) || die("Can't open template include file '$1': '$!'");
+		open(INCLUDE, $1) || die("Can't open template include file '$1': $!\n");
 		while (<INCLUDE>) {
 		    print $_;
 		}
 		close(INCLUDE);
 	    } elsif (/^\#\s*quote\s+\"([^\"]*)\"\s*$/) {
-		open(INCLUDE, $1) || die("Can't open template include file '$1': '$!'");
+		open(INCLUDE, $1) || die("Can't open template include file '$1': $!\n");
 		while (<INCLUDE>) {
 		    s/&/&amp;/g;
 		    s/</&lt;/g;
@@ -276,7 +276,7 @@ while ($_ = shift(@ARGV)) {
 	$setfile = $2;
 	$setfile = shift(@ARGV) if $setfile eq "";
 	push(@SETS, $setfile);
-	open(SET, $setfile) || die("Can't open set file '$setfile': '$!'");
+	open(SET, $setfile) || die("Can't open set file '$setfile': $!\n");
 	$setname = $setfile;
 	while (<SET>) {
 	    while ($_) {
@@ -304,7 +304,7 @@ while ($_ = shift(@ARGV)) {
 	$setfile = shift(@ARGV) if $setfile eq "";
 	push(@SETS, $setfile);
 	my $setf = search_open('<', $setfile);
-	die("Can't open set file '$setfile': '$!'") unless $setf;
+	die("Can't open set file '$setfile': $!\n") unless $setf;
 	$cedf = ($setfile =~ /cedf/); # detect Kosta Kosti's trans CEDF format by path name
 	$setname = $setfile;
 	$setname =~ s/([^.\[\]]*)\..*/$1/;
@@ -692,6 +692,6 @@ while ($_ = shift(@ARGV)) {
 	    delete $used{$i} if is_unicode($i);
 	}
     } else {
-	die("Unknown command line command '$_'");
+	die("Unknown command line command '$_'\n");
     };
 }
