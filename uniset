@@ -148,7 +148,7 @@ sub is_unicode {
 }
 
 my @search_path = ();
-if ($RealBin =~ m|^(.*)/bin/uniset\z| && -d "$1/share/uniset") {
+if ($RealBin =~ m|^(.*)/bin\z| && -d "$1/share/uniset") {
     push @search_path, "$1/share/uniset";
 } else {
     push @search_path, $RealBin;

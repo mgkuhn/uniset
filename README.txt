@@ -2,26 +2,32 @@
 Uniset - a Unicode subset management package
 --------------------------------------------
 
-Markus Kuhn <http://www.cl.cam.ac.uk/~mgk25/> -- 2004-04-10
+Markus Kuhn -- https://www.cl.cam.ac.uk/~mgk25/
 
 
 The latest uniset package is available from
 
-  <http://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz>
+  https://www.cl.cam.ac.uk/~mgk25/download/uniset.tar.gz
+  https://github.com/mgkuhn/uniset
 
 This package contains the Perl script "uniset", which allows you to
 join and subtract Unicode subsets and present the result in various
 forms. It also contains a comprehensive set of files for generating
-and scrutinizing Unicode subsets in a comfortable way.
+and scrutinizing Unicode subsets.
 
-This package is intended for Unix systems on which Perl 5.8 or newer,
-and preferably also the "make" command, is installed. I expect,
-however, that uniset is also easily usable on any other platform on
-which Perl is available, such as Win32 and Mac.
+This package is intended for Unix systems on which Perl 5.14 or newer,
+and preferably also the "make" command, is installed. I'd expect it to
+also be usable on any other platform where Perl is installed.
 
-If you do not have a Perl interpreter installed yet, then get it from
+You can use uniset simply in the directory where you unpacked the
+tarball, or you can install it with
 
-  <http://www.perl.com/latest.html>
+  make install
+
+which puts it under /usr/local/bin, or provide your own prefix, e.g.
+
+  make install DESTDIR=$HOME/local
+
 
 Let's have a look at a few examples of how you can use uniset:
 
@@ -110,5 +116,5 @@ the builtin helptext for details.
 Markus
 
 -- 
-Markus Kuhn, Computer Laboratory, University of Cambridge
-http://www.cl.cam.ac.uk/~mgk25/ || CB3 0FD, Great Britain
+Markus Kuhn, Department of Computer Science and Technology
+https://www.cl.cam.ac.uk/~mgk25/ | University of Cambridge
